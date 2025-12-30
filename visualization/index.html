@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIRE Simulation Results</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 40px;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .stat-value.success { color: #27ae60; }
+        .stat-value.warning { color: #f39c12; }
+        .stat-value.danger { color: #e74c3c; }
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        .chart-container canvas {
+            max-height: 400px;
+        }
+        .params-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        .params-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+        }
+        .param-item {
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .param-label {
+            font-weight: 500;
+            color: #555;
+        }
+        .failure-list {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .failure-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #fff5f5;
+            border-left: 4px solid #e74c3c;
+            border-radius: 4px;
+        }
+        .close-call-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #fffaf0;
+            border-left: 4px solid #f39c12;
+            border-radius: 4px;
+        }
+        .legend-note {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .mortality-section {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            color: white;
+        }
+        .mortality-section h3 {
+            color: #a8d8ea;
+            margin-top: 0;
+            border-bottom: 2px solid #a8d8ea;
+            padding-bottom: 10px;
+        }
+        .mortality-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .mortality-card {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .mortality-card .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #a8d8ea;
+        }
+        .mortality-card .stat-value.real-success {
+            color: #2ecc71;
+        }
+        .mortality-card .stat-value.died-ok {
+            color: #f39c12;
+        }
+        .mortality-card .stat-value.real-fail {
+            color: #e74c3c;
+        }
+        .mortality-card .stat-label {
+            color: #ccc;
+            font-size: 0.85em;
+            margin-top: 5px;
+        }
+        .mortality-note {
+            font-size: 0.85em;
+            color: #aaa;
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            border-left: 3px solid #a8d8ea;
+        }
+        .mortality-disabled {
+            color: #888;
+            font-style: italic;
+            padding: 20px;
+            text-align: center;
+        }
+        .scenario-selector {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .scenario-selector label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .scenario-selector select {
+            padding: 10px 15px;
+            font-size: 1em;
+            border: 2px solid #3498db;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            min-width: 300px;
+        }
+        .scenario-selector select:hover {
+            border-color: #2980b9;
+        }
+        .scenario-selector select:focus {
+            outline: none;
+            border-color: #2980b9;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        .scenario-info {
+            font-size: 0.85em;
+            color: #666;
+            margin-left: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>FIRE Simulation Results</h1>
+
+    <!-- Scenario Selector -->
+    <div class="scenario-selector">
+        <label for="scenarioSelect">Scenario:</label>
+        <select id="scenarioSelect">
+            <option value="data.json">Current (1k simulations)</option>
+        </select>
+        <span class="scenario-info" id="scenarioInfo"></span>
+    </div>
+
+    <div id="loading">Loading simulation data...</div>
+
+    <div id="content" style="display: none;">
+        <!-- Mortality-Adjusted Results (shown first if enabled) -->
+        <div class="mortality-section" id="mortalitySection"></div>
+
+        <!-- Summary Stats -->
+        <h2>Portfolio Success (Ignoring Mortality)</h2>
+        <div class="summary-grid" id="summary"></div>
+
+        <!-- Parameters -->
+        <div class="params-section">
+            <h3>Simulation Parameters</h3>
+            <div class="params-grid" id="params"></div>
+        </div>
+
+        <!-- Fan Chart -->
+        <h2>Portfolio Trajectories (All Percentiles)</h2>
+        <div class="chart-container">
+            <canvas id="fanChart"></canvas>
+            <div class="legend-note">
+                The shaded areas show the range of outcomes. The darker the shade, the more likely.
+                Middle line (50th percentile) = median outcome. Outer edges = best/worst 5%.
+            </div>
+        </div>
+
+        <!-- Failure Chart -->
+        <h2>Failure Analysis (Bottom 5%)</h2>
+        <div class="chart-container">
+            <canvas id="failureChart"></canvas>
+            <div class="legend-note">
+                Each line represents a simulation that ran out of money. Earlier failures (steeper drops) are more concerning.
+            </div>
+        </div>
+
+        <!-- Close Calls -->
+        <h2>Close Calls (Survived but Scary)</h2>
+        <div class="chart-container">
+            <canvas id="closeCallChart"></canvas>
+        </div>
+
+        <!-- Failure List -->
+        <h2>Failure Details</h2>
+        <div class="failure-list" id="failureList"></div>
+    </div>
+
+    <script>
+        // Global chart references (needed to destroy before recreating)
+        let fanChart = null;
+        let failureChart = null;
+        let closeCallChart = null;
+
+        // Available scenarios - discovered dynamically
+        const knownScenarios = [
+            { file: 'data.json', name: 'Current' },
+            { file: 'data_100k.json', name: '100k Simulations (High Precision)' },
+            { file: 'data_10k.json', name: '10k Simulations' },
+            { file: 'data_with_mortality.json', name: 'With Mortality (1k)' },
+            { file: 'data_with_spending_rules.json', name: 'With Spending Rules (no mortality)' }
+        ];
+
+        // Format currency
+        function formatCurrency(amount) {
+            return '€' + Math.round(amount).toLocaleString();
+        }
+
+        // Discover available scenarios and populate dropdown
+        async function discoverScenarios() {
+            const select = document.getElementById('scenarioSelect');
+            select.innerHTML = '';
+
+            for (const scenario of knownScenarios) {
+                try {
+                    const response = await fetch(scenario.file, { method: 'HEAD' });
+                    if (response.ok) {
+                        const option = document.createElement('option');
+                        option.value = scenario.file;
+                        option.textContent = scenario.name;
+                        select.appendChild(option);
+                    }
+                } catch (e) {
+                    // File doesn't exist, skip
+                }
+            }
+
+            // Add change listener
+            select.addEventListener('change', async (e) => {
+                await loadScenario(e.target.value);
+            });
+        }
+
+        // Load and render a specific scenario
+        async function loadScenario(filename) {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('content').style.display = 'none';
+
+            try {
+                const response = await fetch(filename);
+                const data = await response.json();
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+
+                // Destroy existing charts before creating new ones
+                if (fanChart) { fanChart.destroy(); fanChart = null; }
+                if (failureChart) { failureChart.destroy(); failureChart = null; }
+                if (closeCallChart) { closeCallChart.destroy(); closeCallChart = null; }
+
+                // Reset chart containers (in case they were replaced with text)
+                resetChartContainers();
+
+                // Update scenario info
+                const info = document.getElementById('scenarioInfo');
+                info.textContent = `${data.params.num_simulations.toLocaleString()} simulations • Real failure: ${(data.summary.real_failure_rate * 100).toFixed(2)}%`;
+
+                renderMortality(data);
+                renderSummary(data);
+                renderParams(data);
+                renderFanChart(data);
+                renderFailureChart(data);
+                renderCloseCallChart(data);
+                renderFailureList(data);
+            } catch (error) {
+                document.getElementById('loading').innerHTML =
+                    '<p style="color: red;">Error loading data: ' + filename + '</p>' +
+                    '<pre>' + error.message + '</pre>';
+            }
+        }
+
+        // Reset chart containers that may have been replaced with text
+        function resetChartContainers() {
+            const chartIds = ['fanChart', 'failureChart', 'closeCallChart'];
+            chartIds.forEach(id => {
+                const container = document.getElementById(id)?.parentElement;
+                if (container && !document.getElementById(id)) {
+                    // Canvas was replaced, restore it
+                    const canvas = document.createElement('canvas');
+                    canvas.id = id;
+                    // Find legend-note if exists and insert before it
+                    const legend = container.querySelector('.legend-note');
+                    if (legend) {
+                        container.insertBefore(canvas, legend);
+                    } else {
+                        container.innerHTML = '';
+                        container.appendChild(canvas);
+                    }
+                }
+            });
+        }
+
+        // Initialize
+        async function init() {
+            await discoverScenarios();
+            await loadScenario('data.json');
+        }
+
+        function renderMortality(data) {
+            const s = data.summary;
+            const container = document.getElementById('mortalitySection');
+
+            if (!s.mortality_enabled) {
+                container.innerHTML = `
+                    <h3>Mortality Modeling</h3>
+                    <div class="mortality-disabled">
+                        Mortality modeling is disabled. Enable it in config.py to see realistic outcomes
+                        that account for the probability of death at each age.
+                    </div>
+                `;
+                return;
+            }
+
+            const p = data.params;
+            const total = p.num_simulations;
+            const survivedPct = (s.survived_to_end / total * 100).toFixed(1);
+            const diedOkPct = (s.died_with_money / total * 100).toFixed(1);
+            const ranOutPct = (s.ran_out_of_money / total * 100).toFixed(1);
+            const realFailPct = (s.real_failure_rate * 100).toFixed(2);
+
+            container.innerHTML = `
+                <h3>Realistic Outcomes (With Mortality)</h3>
+                <div class="mortality-grid">
+                    <div class="mortality-card">
+                        <div class="stat-value real-success">${survivedPct}%</div>
+                        <div class="stat-label">Survived to ${p.end_age} with Money</div>
+                    </div>
+                    <div class="mortality-card">
+                        <div class="stat-value died-ok">${diedOkPct}%</div>
+                        <div class="stat-label">Died Naturally with Money</div>
+                    </div>
+                    <div class="mortality-card">
+                        <div class="stat-value real-fail">${ranOutPct}%</div>
+                        <div class="stat-label">Ran Out While Alive</div>
+                    </div>
+                    <div class="mortality-card">
+                        <div class="stat-value" style="color: #fff;">${realFailPct}%</div>
+                        <div class="stat-label">REAL Failure Rate</div>
+                    </div>
+                    <div class="mortality-card">
+                        <div class="stat-value">${(s.theoretical_survival_to_end * 100).toFixed(1)}%</div>
+                        <div class="stat-label">P(Survive to ${p.end_age})</div>
+                    </div>
+                    <div class="mortality-card">
+                        <div class="stat-value">${s.life_expectancy ? Math.round(p.start_age + s.life_expectancy) : 'N/A'}</div>
+                        <div class="stat-label">Life Expectancy</div>
+                    </div>
+                </div>
+                <div class="mortality-note">
+                    <strong>How to read this:</strong> Using Finnish male mortality tables (${s.healthy_lifestyle_factor < 1 ? 'adjusted for healthy lifestyle factor ' + s.healthy_lifestyle_factor : 'population average'}),
+                    we sample a random death age for each simulation. The "real failure rate" only counts
+                    simulations where you ran out of money while still alive - the actual risk you face.
+                    ${s.healthy_lifestyle_factor < 1 ? '<br><br><em>Your healthy lifestyle factor accounts for: fit, non-smoking, tall (187cm), family longevity.</em>' : ''}
+                </div>
+            `;
+        }
+
+        function renderSummary(data) {
+            const s = data.summary;
+            const successClass = s.success_rate >= 0.95 ? 'success' : s.success_rate >= 0.90 ? 'warning' : 'danger';
+
+            document.getElementById('summary').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value ${successClass}">${(s.success_rate * 100).toFixed(1)}%</div>
+                    <div class="stat-label">Success Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${s.failure_count}</div>
+                    <div class="stat-label">Failed Simulations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${formatCurrency(s.median_final)}</div>
+                    <div class="stat-label">Median Final Portfolio</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${s.avg_ruin_age ? Math.round(s.avg_ruin_age) : 'N/A'}</div>
+                    <div class="stat-label">Avg Ruin Age (failures)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${(s.hustle_activation_rate * 100).toFixed(1)}%</div>
+                    <div class="stat-label">Hustle Triggered</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${(s.spending_reduction_rate * 100).toFixed(1)}%</div>
+                    <div class="stat-label">Spending Reduced</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${(s.lean_mode_rate * 100).toFixed(1)}%</div>
+                    <div class="stat-label">Lean Mode (€17k)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${formatCurrency(s.percentile_5_final)}</div>
+                    <div class="stat-label">5th Percentile Final</div>
+                </div>
+            `;
+        }
+
+        function renderParams(data) {
+            const p = data.params;
+            const phases = p.income_phases.map(ph =>
+                `Age ${ph.start_age}-${ph.end_age}: €${ph.amount.toLocaleString()} (${ph.name})`
+            ).join('<br>');
+
+            const windfalls = p.windfalls.map(w =>
+                `Age ${w.age}: €${w.amount.toLocaleString()} (${w.name})`
+            ).join('<br>');
+
+            const spendingRules = p.spending_rules && p.spending_rules.enabled ?
+                `Drop to €${p.spending_rules.reduced_spending?.toLocaleString() || '25,000'} at ${(p.spending_rules.drop_threshold * 100)}% portfolio<br>` +
+                `Lean €${p.spending_rules.lean_spending?.toLocaleString() || '17,000'} available at age ${p.spending_rules.lean_age || 60}+<br>` +
+                `Recovery at ${(p.spending_rules.recovery_threshold * 100)}% portfolio` :
+                'Disabled';
+
+            document.getElementById('params').innerHTML = `
+                <div class="param-item">
+                    <span class="param-label">Starting Portfolio:</span> ${formatCurrency(p.starting_portfolio)}
+                </div>
+                <div class="param-item">
+                    <span class="param-label">Annual Expenses:</span> ${formatCurrency(p.annual_expenses)}
+                </div>
+                <div class="param-item">
+                    <span class="param-label">Time Horizon:</span> Age ${p.start_age} to ${p.end_age}
+                </div>
+                <div class="param-item">
+                    <span class="param-label">Expected Return:</span> ${(p.expected_return * 100).toFixed(0)}%
+                </div>
+                <div class="param-item">
+                    <span class="param-label">Inflation:</span> ${(p.inflation * 100).toFixed(0)}%
+                </div>
+                <div class="param-item">
+                    <span class="param-label">Volatility:</span> ${(p.volatility * 100).toFixed(0)}%
+                </div>
+                <div class="param-item">
+                    <span class="param-label">Income Phases:</span><br>${phases}
+                </div>
+                <div class="param-item">
+                    <span class="param-label">Windfalls:</span><br>${windfalls}
+                </div>
+                <div class="param-item">
+                    <span class="param-label">Spending Rules:</span><br>${spendingRules}
+                </div>
+            `;
+        }
+
+        function renderFanChart(data) {
+            const ctx = document.getElementById('fanChart').getContext('2d');
+            const perc = data.percentiles;
+
+            fanChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: perc.ages,
+                    datasets: [
+                        // 5-95 percentile band (lightest)
+                        {
+                            label: '5th-95th percentile',
+                            data: perc.p95,
+                            fill: '+5',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            borderColor: 'rgba(52, 152, 219, 0.3)',
+                            borderWidth: 1,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '',
+                            data: perc.p5,
+                            fill: false,
+                            borderColor: 'rgba(52, 152, 219, 0.3)',
+                            borderWidth: 1,
+                            pointRadius: 0
+                        },
+                        // 15-75 percentile band
+                        {
+                            label: '15th-75th percentile',
+                            data: perc.p75,
+                            fill: '+1',
+                            backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                            borderColor: 'rgba(52, 152, 219, 0.4)',
+                            borderWidth: 1,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '',
+                            data: perc.p15,
+                            fill: false,
+                            borderColor: 'rgba(52, 152, 219, 0.4)',
+                            borderWidth: 1,
+                            pointRadius: 0
+                        },
+                        // 25-75 percentile band
+                        {
+                            label: '25th-75th percentile',
+                            data: perc.p75,
+                            fill: '+1',
+                            backgroundColor: 'rgba(52, 152, 219, 0.3)',
+                            borderColor: 'transparent',
+                            borderWidth: 0,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '',
+                            data: perc.p25,
+                            fill: false,
+                            borderColor: 'transparent',
+                            borderWidth: 0,
+                            pointRadius: 0
+                        },
+                        // Median line (darkest)
+                        {
+                            label: 'Median (50th)',
+                            data: perc.p50,
+                            fill: false,
+                            borderColor: 'rgba(41, 128, 185, 1)',
+                            borderWidth: 3,
+                            pointRadius: 0
+                        },
+                        // 10th percentile line (danger zone)
+                        {
+                            label: '10th percentile',
+                            data: perc.p10,
+                            fill: false,
+                            borderColor: 'rgba(231, 76, 60, 0.7)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                filter: (item) => item.text !== ''
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Age' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Portfolio Value' },
+                            ticks: {
+                                callback: (value) => formatCurrency(value)
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderFailureChart(data) {
+            const ctx = document.getElementById('failureChart').getContext('2d');
+            const failures = data.failures.slice(0, 15); // Show first 15
+
+            const colors = [
+                'rgba(231, 76, 60, 0.7)',
+                'rgba(192, 57, 43, 0.7)',
+                'rgba(155, 89, 182, 0.7)',
+                'rgba(142, 68, 173, 0.7)',
+                'rgba(211, 84, 0, 0.7)'
+            ];
+
+            const datasets = failures.map((f, i) => ({
+                label: `Failed at ${f.ruin_age}`,
+                data: f.trajectory,
+                fill: false,
+                borderColor: colors[i % colors.length],
+                borderWidth: 2,
+                pointRadius: 0
+            }));
+
+            failureChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: failures[0]?.ages || [],
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Age' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Portfolio Value' },
+                            ticks: {
+                                callback: (value) => formatCurrency(value)
+                            },
+                            min: 0
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderCloseCallChart(data) {
+            const ctx = document.getElementById('closeCallChart').getContext('2d');
+            const closeCalls = data.close_calls.slice(0, 10);
+
+            if (closeCalls.length === 0) {
+                ctx.canvas.parentElement.innerHTML = '<p>No close calls (minimum portfolio stayed above threshold in all surviving simulations).</p>';
+                return;
+            }
+
+            const datasets = closeCalls.map((cc, i) => ({
+                label: `Min €${Math.round(cc.min_value/1000)}k at age ${cc.min_age}`,
+                data: cc.trajectory,
+                fill: false,
+                borderColor: `hsla(${40 + i * 10}, 80%, 50%, 0.7)`,
+                borderWidth: 2,
+                pointRadius: 0
+            }));
+
+            closeCallChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: closeCalls[0]?.ages || [],
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Age' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Portfolio Value' },
+                            ticks: {
+                                callback: (value) => formatCurrency(value)
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderFailureList(data) {
+            const container = document.getElementById('failureList');
+            const failures = data.failures;
+            const closeCalls = data.close_calls;
+
+            let html = '<h3>Failed Simulations</h3>';
+            if (failures.length === 0) {
+                html += '<p>No failures in this simulation run!</p>';
+            } else {
+                failures.slice(0, 10).forEach(f => {
+                    const hustleNote = f.hustle_activated ?
+                        ` (hustle triggered at age ${f.hustle_activation_age})` : '';
+                    const spendingNote = f.spending_went_lean ? ' (went lean)' :
+                        (f.spending_reduced ? ' (reduced spending)' : '');
+                    html += `<div class="failure-item">
+                        Ran out of money at age <strong>${f.ruin_age}</strong>${hustleNote}${spendingNote}
+                    </div>`;
+                });
+                if (failures.length > 10) {
+                    html += `<p>...and ${failures.length - 10} more failures</p>`;
+                }
+            }
+
+            html += '<h3 style="margin-top: 20px;">Close Calls (Survived but Got Scary)</h3>';
+            if (closeCalls.length === 0) {
+                html += '<p>No close calls - all survivors maintained healthy portfolios.</p>';
+            } else {
+                closeCalls.slice(0, 5).forEach(cc => {
+                    const hustleNote = cc.hustle_activated ? ' (hustle helped!)' : '';
+                    const spendingNote = cc.spending_went_lean ? ' (went lean)' :
+                        (cc.spending_reduced ? ' (reduced spending)' : '');
+                    html += `<div class="close-call-item">
+                        Dropped to <strong>${formatCurrency(cc.min_value)}</strong> at age ${cc.min_age},
+                        recovered to ${formatCurrency(cc.final_portfolio)}${hustleNote}${spendingNote}
+                    </div>`;
+                });
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
