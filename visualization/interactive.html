@@ -96,6 +96,20 @@
         .euro-prefix input {
             padding-left: 24px;
         }
+        .pct-suffix {
+            position: relative;
+        }
+        .pct-suffix::after {
+            content: "%";
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+        }
+        .pct-suffix input {
+            padding-right: 28px;
+        }
 
         /* Slider */
         .slider-group {
@@ -396,10 +410,98 @@
                     </div>
                 </div>
                 <div class="input-row">
-                    <label>Lean Spending (60+)</label>
+                    <label>Lean Spending</label>
                     <div class="euro-prefix">
                         <input type="number" id="lean_spending" value="17000" step="1000">
                     </div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <h3>Time Horizon</h3>
+                <div class="input-row">
+                    <label>Start Age (FIRE)</label>
+                    <input type="number" id="start_age" value="47" min="30" max="60">
+                </div>
+                <div class="input-row">
+                    <label>End Age (survival)</label>
+                    <input type="number" id="end_age" value="95" min="70" max="110">
+                </div>
+                <div class="input-row">
+                    <label>Inheritance Age</label>
+                    <input type="number" id="inheritance_age" value="55" min="47" max="90">
+                </div>
+                <div class="input-row">
+                    <label>Pension Start Age</label>
+                    <input type="number" id="pension_start_age" value="65" min="60" max="75">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <h3>Investment Assumptions</h3>
+                <div class="input-row">
+                    <label>Expected Return</label>
+                    <div class="pct-suffix">
+                        <input type="number" id="expected_return" value="6" step="0.5" min="0" max="15">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <label>Inflation</label>
+                    <div class="pct-suffix">
+                        <input type="number" id="inflation" value="2" step="0.5" min="0" max="10">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <label>Volatility (std dev)</label>
+                    <div class="pct-suffix">
+                        <input type="number" id="volatility" value="15" step="1" min="5" max="30">
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <h3>Emergency Hustle Rules</h3>
+                <div class="input-row">
+                    <label>Trigger until age</label>
+                    <input type="number" id="hustle_trigger_age_max" value="52" min="47" max="65">
+                </div>
+                <div class="input-row">
+                    <label>Duration (years)</label>
+                    <input type="number" id="hustle_duration" value="3" min="1" max="10">
+                </div>
+                <div class="input-row">
+                    <label>Portfolio threshold</label>
+                    <div class="pct-suffix">
+                        <input type="number" id="hustle_portfolio_threshold" value="70" step="5" min="30" max="90">
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <h3>Spending Rules</h3>
+                <div class="input-row">
+                    <label>Drop threshold</label>
+                    <div class="pct-suffix">
+                        <input type="number" id="spending_drop_threshold" value="50" step="5" min="20" max="80">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <label>Recovery threshold</label>
+                    <div class="pct-suffix">
+                        <input type="number" id="spending_recovery_threshold" value="60" step="5" min="30" max="90">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <label>Lean mode age</label>
+                    <input type="number" id="lean_age" value="60" min="50" max="75">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <h3>Mortality Modeling</h3>
+                <div class="input-row">
+                    <label>Healthy lifestyle factor</label>
+                    <input type="number" id="healthy_lifestyle_factor" value="0.65" step="0.05" min="0.4" max="1.0">
                 </div>
             </div>
         </div>
@@ -497,24 +599,45 @@
             status.textContent = 'Running simulation...';
             status.className = 'running';
 
+            const startAge = getInputValue('start_age');
+            const endAge = getInputValue('end_age');
+            const pensionAge = getInputValue('pension_start_age');
+
             const params = {
                 starting_portfolio: getInputValue('starting_portfolio'),
                 annual_expenses: getInputValue('annual_expenses'),
+                start_age: startAge,
+                end_age: endAge,
+                expected_return: parseFloat(document.getElementById('expected_return').value) / 100,
+                inflation: parseFloat(document.getElementById('inflation').value) / 100,
+                volatility: parseFloat(document.getElementById('volatility').value) / 100,
                 income_phases: [
-                    { start_age: 47, end_age: 57, amount: getInputValue('income_rgt'), name: 'RGT + trading' },
-                    { start_age: 58, end_age: 64, amount: getInputValue('income_trading'), name: 'Trading only' },
-                    { start_age: 65, end_age: 95, amount: getInputValue('income_pension'), name: 'Kansaneläke' }
+                    { start_age: startAge, end_age: 57, amount: getInputValue('income_rgt'), name: 'RGT + trading' },
+                    { start_age: 58, end_age: pensionAge - 1, amount: getInputValue('income_trading'), name: 'Trading only' },
+                    { start_age: pensionAge, end_age: endAge, amount: getInputValue('income_pension'), name: 'Kansaneläke' }
                 ],
                 windfalls: [
-                    { age: 55, amount: getInputValue('inheritance'), name: 'Inheritance' },
+                    { age: getInputValue('inheritance_age'), amount: getInputValue('inheritance'), name: 'Inheritance' },
                     { age: 58, amount: getInputValue('rgt_liquidation'), name: 'RGT liquidation' }
                 ],
                 emergency_hustle: {
-                    extra_income: getInputValue('hustle_income')
+                    enabled: true,
+                    trigger_age_max: getInputValue('hustle_trigger_age_max'),
+                    portfolio_threshold: parseFloat(document.getElementById('hustle_portfolio_threshold').value) / 100,
+                    extra_income: getInputValue('hustle_income'),
+                    duration: getInputValue('hustle_duration')
                 },
                 spending_rules: {
+                    enabled: true,
+                    drop_threshold: parseFloat(document.getElementById('spending_drop_threshold').value) / 100,
+                    recovery_threshold: parseFloat(document.getElementById('spending_recovery_threshold').value) / 100,
                     reduced_spending: getInputValue('reduced_spending'),
-                    lean_spending: getInputValue('lean_spending')
+                    lean_spending: getInputValue('lean_spending'),
+                    lean_age: getInputValue('lean_age')
+                },
+                mortality: {
+                    enabled: true,
+                    healthy_lifestyle_factor: parseFloat(document.getElementById('healthy_lifestyle_factor').value)
                 },
                 num_simulations: getInputValue('num_simulations')
             };

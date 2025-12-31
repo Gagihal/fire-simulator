@@ -188,11 +188,25 @@ def simulate():
         # Start with defaults
         params = copy.deepcopy(DEFAULT_PARAMS)
 
-        # Override with user values
+        # Override with user values - Portfolio & Expenses
         if 'starting_portfolio' in user_params:
             params['starting_portfolio'] = int(user_params['starting_portfolio'])
         if 'annual_expenses' in user_params:
             params['annual_expenses'] = int(user_params['annual_expenses'])
+
+        # Time horizon
+        if 'start_age' in user_params:
+            params['start_age'] = int(user_params['start_age'])
+        if 'end_age' in user_params:
+            params['end_age'] = int(user_params['end_age'])
+
+        # Investment assumptions
+        if 'expected_return' in user_params:
+            params['expected_return'] = float(user_params['expected_return'])
+        if 'inflation' in user_params:
+            params['inflation'] = float(user_params['inflation'])
+        if 'volatility' in user_params:
+            params['volatility'] = float(user_params['volatility'])
 
         # Income phases
         if 'income_phases' in user_params:
@@ -211,6 +225,13 @@ def simulate():
         if 'spending_rules' in user_params:
             for key, value in user_params['spending_rules'].items():
                 params['spending_rules'][key] = value
+
+        # Mortality - merge with defaults
+        if 'mortality' in user_params:
+            if 'mortality' not in params:
+                params['mortality'] = {}
+            for key, value in user_params['mortality'].items():
+                params['mortality'][key] = value
 
         # Get simulation count (default 1000, max 10000)
         num_simulations = min(int(user_params.get('num_simulations', 1000)), 10000)
