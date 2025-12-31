@@ -233,8 +233,8 @@ def simulate():
             for key, value in user_params['mortality'].items():
                 params['mortality'][key] = value
 
-        # Get simulation count (default 1000, max 10000)
-        num_simulations = min(int(user_params.get('num_simulations', 1000)), 10000)
+        # Get simulation count (default 1000, max 100000)
+        num_simulations = min(int(user_params.get('num_simulations', 1000)), 100000)
 
         # Run simulation
         result = run_simulation_with_params(params, num_simulations)

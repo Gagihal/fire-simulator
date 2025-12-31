@@ -86,15 +86,16 @@
             position: relative;
         }
         .euro-prefix::before {
-            content: "€";
+            content: "€k";
             position: absolute;
-            left: 12px;
+            left: 10px;
             top: 50%;
             transform: translateY(-50%);
             color: #888;
+            font-size: 0.9em;
         }
         .euro-prefix input {
-            padding-left: 24px;
+            padding-left: 32px;
         }
         .pct-suffix {
             position: relative;
@@ -346,13 +347,13 @@
                 <div class="input-row">
                     <label>Starting Portfolio</label>
                     <div class="euro-prefix">
-                        <input type="number" id="starting_portfolio" value="1200000" step="10000">
+                        <input type="number" id="starting_portfolio" value="1200" step="10">
                     </div>
                 </div>
                 <div class="input-row">
                     <label>Annual Expenses</label>
                     <div class="euro-prefix">
-                        <input type="number" id="annual_expenses" value="32500" step="500">
+                        <input type="number" id="annual_expenses" value="32.5" step="0.5">
                     </div>
                 </div>
             </div>
@@ -362,19 +363,19 @@
                 <div class="input-row">
                     <label>RGT + Trading (47-57)</label>
                     <div class="euro-prefix">
-                        <input type="number" id="income_rgt" value="17000" step="1000">
+                        <input type="number" id="income_rgt" value="17" step="1">
                     </div>
                 </div>
                 <div class="input-row">
                     <label>Trading only (58-64)</label>
                     <div class="euro-prefix">
-                        <input type="number" id="income_trading" value="10000" step="1000">
+                        <input type="number" id="income_trading" value="10" step="1">
                     </div>
                 </div>
                 <div class="input-row">
                     <label>Kansaneläke (65+)</label>
                     <div class="euro-prefix">
-                        <input type="number" id="income_pension" value="8400" step="100">
+                        <input type="number" id="income_pension" value="8.4" step="0.1">
                     </div>
                 </div>
             </div>
@@ -384,13 +385,13 @@
                 <div class="input-row">
                     <label>Inheritance (age 55)</label>
                     <div class="euro-prefix">
-                        <input type="number" id="inheritance" value="200000" step="10000">
+                        <input type="number" id="inheritance" value="200" step="10">
                     </div>
                 </div>
                 <div class="input-row">
                     <label>RGT Liquidation (age 58)</label>
                     <div class="euro-prefix">
-                        <input type="number" id="rgt_liquidation" value="60000" step="5000">
+                        <input type="number" id="rgt_liquidation" value="60" step="5">
                     </div>
                 </div>
             </div>
@@ -400,19 +401,19 @@
                 <div class="input-row">
                     <label>Hustle Income (if triggered)</label>
                     <div class="euro-prefix">
-                        <input type="number" id="hustle_income" value="40000" step="5000">
+                        <input type="number" id="hustle_income" value="40" step="5">
                     </div>
                 </div>
                 <div class="input-row">
                     <label>Reduced Spending</label>
                     <div class="euro-prefix">
-                        <input type="number" id="reduced_spending" value="25000" step="1000">
+                        <input type="number" id="reduced_spending" value="25" step="1">
                     </div>
                 </div>
                 <div class="input-row">
                     <label>Lean Spending</label>
                     <div class="euro-prefix">
-                        <input type="number" id="lean_spending" value="17000" step="1000">
+                        <input type="number" id="lean_spending" value="17" step="1">
                     </div>
                 </div>
             </div>
@@ -508,7 +509,7 @@
 
         <div class="slider-group">
             <label>Number of Simulations</label>
-            <input type="range" id="num_simulations" min="100" max="5000" step="100" value="1000">
+            <input type="range" id="num_simulations" min="1000" max="100000" step="1000" value="1000">
             <div class="slider-value"><span id="simCount">1000</span> simulations</div>
         </div>
 
@@ -585,7 +586,13 @@
         }
 
         // Get input value as integer
+        // Get euro input value (stored in thousands, convert to full amount)
         function getInputValue(id) {
+            return Math.round(parseFloat(document.getElementById(id).value) * 1000) || 0;
+        }
+
+        // Get age/count input value (no multiplication needed)
+        function getIntValue(id) {
             return parseInt(document.getElementById(id).value) || 0;
         }
 
@@ -599,9 +606,9 @@
             status.textContent = 'Running simulation...';
             status.className = 'running';
 
-            const startAge = getInputValue('start_age');
-            const endAge = getInputValue('end_age');
-            const pensionAge = getInputValue('pension_start_age');
+            const startAge = getIntValue('start_age');
+            const endAge = getIntValue('end_age');
+            const pensionAge = getIntValue('pension_start_age');
 
             const params = {
                 starting_portfolio: getInputValue('starting_portfolio'),
@@ -617,15 +624,15 @@
                     { start_age: pensionAge, end_age: endAge, amount: getInputValue('income_pension'), name: 'Kansaneläke' }
                 ],
                 windfalls: [
-                    { age: getInputValue('inheritance_age'), amount: getInputValue('inheritance'), name: 'Inheritance' },
+                    { age: getIntValue('inheritance_age'), amount: getInputValue('inheritance'), name: 'Inheritance' },
                     { age: 58, amount: getInputValue('rgt_liquidation'), name: 'RGT liquidation' }
                 ],
                 emergency_hustle: {
                     enabled: true,
-                    trigger_age_max: getInputValue('hustle_trigger_age_max'),
+                    trigger_age_max: getIntValue('hustle_trigger_age_max'),
                     portfolio_threshold: parseFloat(document.getElementById('hustle_portfolio_threshold').value) / 100,
                     extra_income: getInputValue('hustle_income'),
-                    duration: getInputValue('hustle_duration')
+                    duration: getIntValue('hustle_duration')
                 },
                 spending_rules: {
                     enabled: true,
@@ -633,13 +640,13 @@
                     recovery_threshold: parseFloat(document.getElementById('spending_recovery_threshold').value) / 100,
                     reduced_spending: getInputValue('reduced_spending'),
                     lean_spending: getInputValue('lean_spending'),
-                    lean_age: getInputValue('lean_age')
+                    lean_age: getIntValue('lean_age')
                 },
                 mortality: {
                     enabled: true,
                     healthy_lifestyle_factor: parseFloat(document.getElementById('healthy_lifestyle_factor').value)
                 },
-                num_simulations: getInputValue('num_simulations')
+                num_simulations: getIntValue('num_simulations')
             };
 
             try {
