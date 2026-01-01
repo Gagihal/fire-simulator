@@ -1,13 +1,6 @@
 """
-Configuration for FIRE simulation.
-
-This file contains your personal financial parameters.
-Tweak these values to see how changes affect your outcomes.
+Configuration for FIRE simulation - personal financial parameters.
 """
-
-# =============================================================================
-# YOUR SITUATION
-# =============================================================================
 
 DEFAULT_PARAMS = {
     # Portfolio
@@ -17,11 +10,11 @@ DEFAULT_PARAMS = {
     'annual_expenses': 32_500,        # Midpoint of 30-35k lifestyle
 
     # Income phases (age-dependent)
-    # Income changes as you age - RGT winds down, pension kicks in
+    # RGT = revenue-generating asset (rental property)
     'income_phases': [
-        {'start_age': 47, 'end_age': 57, 'amount': 17_000, 'name': 'RGT + trading'},
+        {'start_age': 47, 'end_age': 57, 'amount': 17_000, 'name': 'RGT (rental) + trading'},
         {'start_age': 58, 'end_age': 64, 'amount': 10_000, 'name': 'Trading only'},
-        {'start_age': 65, 'end_age': 95, 'amount': 8_400, 'name': 'Kansaneläke'},
+        {'start_age': 65, 'end_age': 95, 'amount': 8_400, 'name': 'Kansaneläke (Finnish state pension)'},
     ],
 
     # Windfall events (one-time additions to portfolio)
@@ -60,24 +53,74 @@ DEFAULT_PARAMS = {
         'lean_age': 60,               # Age when lean mode becomes available
     },
 
-    # Mortality modeling (realistic death probability each year)
-    # Uses Finnish male mortality data from Tilastokeskus 2021
+    # Mortality modeling using Finnish male mortality data
     'mortality': {
         'enabled': True,
-        'healthy_lifestyle_factor': 0.65,  # Multiplier for qx values
-                                           # 0.65 = ~35% lower mortality than average
-                                           # (fit, non-smoker, tall, family longevity)
+        'health_class': 'average',      # 'excellent', 'average', or 'impaired'
+        'tech_scenario': 'moderate',    # 'conservative', 'moderate', or 'optimistic'
+        # Legacy support (deprecated, use health_class instead)
+        'healthy_lifestyle_factor': None,
     },
 }
 
-# =============================================================================
-# FINNISH MALE MORTALITY TABLE (Tilastokeskus 2021)
-# =============================================================================
-# qx = probability of dying within the year, per 1,000 males
-# Source: Statistics Finland life tables for Finnish males
+# Health class parameters for age-varying mortality adjustment
+# Based on SOA 2015 VBT Super Preferred / Standard ratios
+# Health advantage diminishes with age (convergence toward frailty)
+# Convergence completes by age 100 to allow modeling of supercentenarians
+HEALTH_CLASS_PARAMS = {
+    'excellent': {
+        'base_ratio': 0.30,         # Ratio at age 45 (70% lower mortality)
+        'convergence_ratio': 1.0,   # Fully converged by age 100
+        'convergence_age': 100,     # Age at which convergence completes
+        'description': 'Non-smoker, healthy weight, regular exercise, no chronic conditions, family longevity'
+    },
+    'average': {
+        'base_ratio': 1.0,
+        'convergence_ratio': 1.0,
+        'convergence_age': 100,
+        'description': 'General population baseline'
+    },
+    'impaired': {
+        'base_ratio': 1.50,         # 50% higher mortality at age 45
+        'convergence_ratio': 1.0,   # Fully converged by age 100
+        'convergence_age': 100,
+        'description': 'Chronic conditions, smoking history, obesity, or significant health concerns'
+    }
+}
 
+# Technology improvement scenarios for future mortality reduction
+# Based on demographic research: improvement varies by age group
+TECH_SCENARIO_PARAMS = {
+    'conservative': {
+        'rate_multiplier': 0.5,
+        'description': 'Improvement slows significantly from historical rates (+1-2 years LE)'
+    },
+    'moderate': {
+        'rate_multiplier': 1.0,
+        'description': 'Continue post-2010 trends (+2-3 years LE)'
+    },
+    'optimistic': {
+        'rate_multiplier': 1.5,
+        'description': 'Medical advances accelerate - AI, gene therapy, etc (+4-5 years LE)'
+    }
+}
+
+# Age-specific base improvement rates (annual) for tech dimension
+# Middle ages improve faster (cardiovascular advances), oldest ages slower
+# Ages 100+ have diminishing returns from medical advances
+AGE_IMPROVEMENT_RATES = {
+    (0, 65): 0.015,    # 1.5% annual improvement for working/early retirement ages
+    (65, 85): 0.012,   # 1.2% annual improvement for young-old
+    (85, 100): 0.006,  # 0.6% annual improvement for oldest-old
+    (100, 150): 0.003  # 0.3% annual improvement for supercentenarians (diminishing returns)
+}
+
+# Finnish male mortality table (Tilastokeskus 2021)
+# qx = probability of dying within the year, per 1,000 males
+# Ages 47-95: Official Finnish statistics
+# Ages 96-110: Extrapolated using Gompertz-Makeham model and supercentenarian research
+#              Mortality plateaus around 650-685/1000 at extreme ages
 FINNISH_MALE_MORTALITY = {
-    # Age: qx per 1,000
     47: 3.8,
     48: 4.1,
     49: 4.4,
@@ -127,4 +170,21 @@ FINNISH_MALE_MORTALITY = {
     93: 425.2,
     94: 472.5,
     95: 525.0,
+    # Extended ages (96-110) based on supercentenarian research
+    # Mortality continues rising but plateaus around 650-685
+    96: 550.0,
+    97: 572.0,
+    98: 592.0,
+    99: 610.0,
+    100: 625.0,
+    101: 638.0,
+    102: 650.0,
+    103: 660.0,
+    104: 668.0,
+    105: 675.0,
+    106: 680.0,
+    107: 683.0,
+    108: 685.0,
+    109: 685.0,
+    110: 685.0,  # Plateau - mortality doesn't increase beyond this
 }

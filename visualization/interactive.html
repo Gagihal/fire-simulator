@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FIRE Simulator - Interactive</title>
+    <title>FIRE Simulator</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             max-width: 1400px;
@@ -21,28 +19,69 @@
             color: #2c3e50;
             border-bottom: 3px solid #3498db;
             padding-bottom: 10px;
+            margin-bottom: 20px;
         }
-        h2 {
-            color: #34495e;
-            margin-top: 40px;
-        }
+        h2 { color: #34495e; margin-top: 30px; }
 
-        /* Input Panel */
-        .input-panel {
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 0;
+            background: #e0e0e0;
+            padding: 4px 4px 0;
+            border-radius: 12px 12px 0 0;
+        }
+        .tab-button {
+            padding: 14px 28px;
+            font-size: 1em;
+            font-weight: 600;
+            background: #ccc;
+            color: #555;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-button:hover { background: #ddd; }
+        .tab-button.active {
+            background: white;
+            color: #2c3e50;
+            box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+        }
+        .tab-content {
             background: white;
             padding: 25px;
-            border-radius: 12px;
+            border-radius: 0 12px 12px 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             margin-bottom: 30px;
         }
-        .input-panel h2 {
-            margin-top: 0;
+
+        /* Template Buttons */
+        .template-section {
+            display: flex;
+            gap: 10px;
             margin-bottom: 20px;
-            color: #2c3e50;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
         }
+        .template-btn {
+            padding: 8px 16px;
+            font-size: 0.9em;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .template-btn:hover { background: #e0e0e0; }
+        .template-btn.example { background: #e8f4fc; border-color: #3498db; color: #2980b9; }
+        .template-btn.example:hover { background: #d4edfc; }
+
+        /* Input Panel */
         .input-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
         }
         .input-group {
@@ -56,31 +95,37 @@
             color: #555;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .input-row {
             display: flex;
             align-items: center;
             margin-bottom: 10px;
+            gap: 8px;
         }
-        .input-row:last-child {
-            margin-bottom: 0;
-        }
+        .input-row:last-child { margin-bottom: 0; }
         .input-row label {
             flex: 1;
             font-size: 0.9em;
             color: #666;
         }
         .input-row input {
-            width: 120px;
-            padding: 8px 12px;
+            width: 100px;
+            padding: 8px 10px;
             border: 2px solid #ddd;
             border-radius: 6px;
-            font-size: 1em;
+            font-size: 0.95em;
             text-align: right;
         }
         .input-row input:focus {
             outline: none;
             border-color: #3498db;
+        }
+        .input-row input[type="text"] {
+            width: 140px;
+            text-align: left;
         }
         .euro-prefix {
             position: relative;
@@ -88,29 +133,174 @@
         .euro-prefix::before {
             content: "€k";
             position: absolute;
-            left: 10px;
+            left: 8px;
             top: 50%;
             transform: translateY(-50%);
             color: #888;
-            font-size: 0.9em;
+            font-size: 0.85em;
         }
-        .euro-prefix input {
-            padding-left: 32px;
-        }
+        .euro-prefix input { padding-left: 28px; }
         .pct-suffix {
             position: relative;
         }
         .pct-suffix::after {
             content: "%";
             position: absolute;
-            right: 12px;
+            right: 10px;
             top: 50%;
             transform: translateY(-50%);
             color: #888;
         }
-        .pct-suffix input {
-            padding-right: 28px;
+        .pct-suffix input { padding-right: 24px; }
+
+        /* Modal Dialog */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
         }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .modal h3 {
+            margin: 0 0 20px 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .modal-field {
+            margin-bottom: 16px;
+        }
+        .modal-field label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #555;
+        }
+        .modal-field input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+        .modal-field input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .modal-field .hint {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 4px;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 0.95em;
+            cursor: pointer;
+            border: none;
+        }
+        .modal-btn.cancel {
+            background: #eee;
+            color: #555;
+        }
+        .modal-btn.cancel:hover { background: #ddd; }
+        .modal-btn.save {
+            background: #3498db;
+            color: white;
+        }
+        .modal-btn.save:hover { background: #2980b9; }
+        .modal-btn.delete {
+            background: #e74c3c;
+            color: white;
+            margin-right: auto;
+        }
+        .modal-btn.delete:hover { background: #c0392b; }
+
+        /* Summary List (replaces dynamic-item inline editing) */
+        .summary-list {
+            margin-top: 10px;
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .summary-item:hover {
+            border-color: #3498db;
+            background: #f8fbfe;
+        }
+        .summary-item .summary-text {
+            flex: 1;
+        }
+        .summary-item .summary-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .summary-item .summary-details {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 2px;
+        }
+        .summary-item .edit-hint {
+            color: #aaa;
+            font-size: 0.8em;
+        }
+        .no-items {
+            color: #888;
+            font-size: 0.9em;
+            padding: 12px;
+            text-align: center;
+            background: #f9f9f9;
+            border-radius: 6px;
+        }
+        .remove-btn {
+            padding: 4px 10px;
+            background: #fee;
+            color: #c44;
+            border: 1px solid #fcc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .remove-btn:hover { background: #fdd; }
+        .add-btn {
+            padding: 6px 12px;
+            font-size: 0.85em;
+            background: #e8f4fc;
+            color: #2980b9;
+            border: 1px solid #b3d9f2;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .add-btn:hover { background: #d4edfc; }
+        .add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* Slider */
         .slider-group {
@@ -119,23 +309,11 @@
             background: #e8f4fc;
             border-radius: 8px;
         }
-        .slider-group label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: 500;
-        }
-        .slider-group input[type="range"] {
-            width: 100%;
-            margin-bottom: 5px;
-        }
-        .slider-value {
-            text-align: center;
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #2c3e50;
-        }
+        .slider-group label { display: block; margin-bottom: 10px; font-weight: 500; }
+        .slider-group input[type="range"] { width: 100%; margin-bottom: 5px; }
+        .slider-value { text-align: center; font-size: 1.2em; font-weight: bold; color: #2c3e50; }
 
-        /* Run Button */
+        /* Buttons */
         .run-section {
             display: flex;
             align-items: center;
@@ -144,7 +322,7 @@
             padding-top: 20px;
             border-top: 1px solid #eee;
         }
-        #runSimulation {
+        .primary-btn {
             padding: 15px 40px;
             font-size: 1.1em;
             font-weight: 600;
@@ -155,31 +333,225 @@
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
         }
-        #runSimulation:hover {
+        .primary-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
         }
-        #runSimulation:active {
-            transform: translateY(0);
-        }
-        #runSimulation:disabled {
+        .primary-btn:active { transform: translateY(0); }
+        .primary-btn:disabled {
             background: #bdc3c7;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
-        #status {
-            font-size: 0.95em;
+        #status { font-size: 0.95em; color: #666; }
+        #status.running { color: #f39c12; }
+        #status.success { color: #27ae60; }
+        #status.error { color: #e74c3c; }
+
+        /* Historical Simulation Button */
+        .historical-btn {
+            background: linear-gradient(135deg, #8e44ad 0%, #6c3483 100%);
+        }
+        .historical-btn:hover {
+            box-shadow: 0 4px 12px rgba(142, 68, 173, 0.4);
+        }
+
+        /* Historical + Mortality Button */
+        .mortality-btn {
+            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+        }
+        .mortality-btn:hover {
+            box-shadow: 0 4px 12px rgba(26, 188, 156, 0.4);
+        }
+
+        /* Stress Test Button */
+        .stress-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+        .stress-btn:hover {
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+        }
+
+        /* Stress Test Results */
+        .stress-intro {
             color: #666;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #fff5f5;
+            border-left: 4px solid #e74c3c;
+            border-radius: 0 8px 8px 0;
         }
-        #status.running {
-            color: #f39c12;
+        .stress-scenario-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+            overflow: hidden;
         }
-        #status.success {
-            color: #27ae60;
+        .stress-scenario-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
         }
-        #status.error {
-            color: #e74c3c;
+        .stress-scenario-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .stress-success-badge {
+            font-size: 1.4em;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+        .stress-success-badge.excellent { background: #27ae60; color: white; }
+        .stress-success-badge.good { background: #2ecc71; color: white; }
+        .stress-success-badge.warning { background: #f39c12; color: white; }
+        .stress-success-badge.danger { background: #e74c3c; color: white; }
+        .stress-scenario-body {
+            padding: 20px;
+        }
+        .stress-description {
+            color: #555;
+            margin-bottom: 12px;
+            font-size: 0.95em;
+        }
+        .stress-likelihood {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #e8f4fc;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #2980b9;
+            margin-bottom: 12px;
+        }
+        .stress-commentary {
+            background: #fffbf0;
+            border-left: 3px solid #f39c12;
+            padding: 12px 16px;
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        .stress-chart-container {
+            height: 280px;
+            margin-top: 16px;
+        }
+        .stress-stats-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .stress-stat {
+            background: #f8f9fa;
+            padding: 10px 16px;
+            border-radius: 6px;
+            text-align: center;
+            min-width: 100px;
+        }
+        .stress-stat-value {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .stress-stat-label {
+            font-size: 0.75em;
+            color: #888;
+            margin-top: 2px;
+        }
+        .stress-severity {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 10px;
+        }
+        .stress-severity.extreme { background: #fadbd8; color: #c0392b; }
+        .stress-severity.high { background: #fdebd0; color: #d35400; }
+        .stress-severity.moderate { background: #fcf3cf; color: #b7950b; }
+
+        /* Method Comparison Display */
+        .method-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .method-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        .method-badge.monte-carlo {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+        .method-badge.historical {
+            background: linear-gradient(135deg, #8e44ad 0%, #6c3483 100%);
+            color: white;
+        }
+
+        /* Historical Failure Years */
+        .failure-years-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 15px 0;
+        }
+        .failure-year-tag {
+            padding: 4px 10px;
+            background: #fee;
+            border: 1px solid #fcc;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #c44;
+        }
+        .failure-year-tag.famous {
+            background: #fdd;
+            border-color: #e74c3c;
+            font-weight: 600;
+        }
+
+        /* Assessment Result */
+        .assessment-result {
+            margin-top: 20px;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .assessment-result.achieved {
+            background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+            color: white;
+        }
+        .assessment-result.not-achieved {
+            background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
+            color: white;
+        }
+        .assessment-result h2 { color: white; margin: 0 0 15px 0; }
+        .assessment-result .big-number {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .assessment-result .details {
+            font-size: 1.1em;
+            opacity: 0.9;
+            margin-top: 15px;
+        }
+        .assessment-result .action {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.3);
         }
 
         /* Results */
@@ -204,11 +576,8 @@
         .stat-value.success { color: #27ae60; }
         .stat-value.warning { color: #f39c12; }
         .stat-value.danger { color: #e74c3c; }
-        .stat-label {
-            color: #7f8c8d;
-            font-size: 0.85em;
-            margin-top: 5px;
-        }
+        .stat-label { color: #7f8c8d; font-size: 0.85em; margin-top: 5px; }
+
         .chart-container {
             background: white;
             padding: 20px;
@@ -216,9 +585,16 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin: 20px 0;
         }
-        .chart-container canvas {
-            max-height: 400px;
+        .chart-container canvas { max-height: 400px; }
+        .legend-note {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
         }
+
         .params-section {
             background: white;
             padding: 20px;
@@ -236,10 +612,8 @@
             background: #f8f9fa;
             border-radius: 4px;
         }
-        .param-label {
-            font-weight: 500;
-            color: #555;
-        }
+        .param-label { font-weight: 500; color: #555; }
+
         .failure-list {
             background: white;
             padding: 20px;
@@ -260,14 +634,7 @@
             border-left: 4px solid #f39c12;
             border-radius: 4px;
         }
-        .legend-note {
-            font-size: 0.85em;
-            color: #666;
-            margin-top: 10px;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 4px;
-        }
+
         .mortality-section {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             padding: 25px;
@@ -293,19 +660,11 @@
             border-radius: 8px;
             text-align: center;
         }
-        .mortality-card .stat-value {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: #a8d8ea;
-        }
+        .mortality-card .stat-value { font-size: 1.8em; font-weight: bold; color: #a8d8ea; }
         .mortality-card .stat-value.real-success { color: #2ecc71; }
         .mortality-card .stat-value.died-ok { color: #f39c12; }
         .mortality-card .stat-value.real-fail { color: #e74c3c; }
-        .mortality-card .stat-label {
-            color: #ccc;
-            font-size: 0.85em;
-            margin-top: 5px;
-        }
+        .mortality-card .stat-label { color: #ccc; font-size: 0.85em; margin-top: 5px; }
         .mortality-note {
             font-size: 0.85em;
             color: #aaa;
@@ -322,187 +681,390 @@
             text-align: center;
         }
 
-        /* Initial state */
-        #results {
-            display: none;
-        }
         .initial-message {
             text-align: center;
             padding: 60px 20px;
             color: #888;
             font-size: 1.1em;
         }
+        #tab2-results { display: none; }
+
+        /* Tooltip Styles */
+        .tooltip-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: #ccc;
+            color: #666;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-left: 6px;
+            transition: all 0.2s;
+            font-style: normal;
+        }
+        .tooltip-icon:hover {
+            background: #3498db;
+            color: white;
+        }
+        .tooltip-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .tooltip-overlay.active { display: flex; }
+        .tooltip-popup {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            position: relative;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .tooltip-popup h4 {
+            margin: 0 0 12px 0;
+            color: #2c3e50;
+            font-size: 1.2em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+        .tooltip-popup p {
+            margin: 0 0 12px 0;
+            color: #555;
+            line-height: 1.6;
+        }
+        .tooltip-popup p:last-child { margin-bottom: 0; }
+        .tooltip-popup .tip-example {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            margin-top: 12px;
+            border-left: 3px solid #3498db;
+        }
+        .tooltip-popup .tip-example strong {
+            color: #2c3e50;
+        }
+        .tooltip-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 28px;
+            height: 28px;
+            background: #eee;
+            border: none;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+        .tooltip-close:hover {
+            background: #ddd;
+            color: #333;
+        }
     </style>
 </head>
 <body>
     <h1>FIRE Simulator</h1>
 
-    <!-- Input Panel -->
-    <div class="input-panel">
-        <h2>Simulation Parameters</h2>
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+        <button class="tab-button active" data-tab="assessment" onclick="showTab('assessment')">
+            Current Situation
+        </button>
+        <button class="tab-button" data-tab="scenarios" onclick="showTab('scenarios')">
+            Future Scenarios
+        </button>
+    </div>
+
+    <!-- Tab 1: FIRE Assessment -->
+    <div id="tab-assessment" class="tab-content">
+        <div class="template-section">
+            <button class="template-btn" onclick="loadTemplate('blank')">Start Fresh</button>
+            <button class="template-btn example" onclick="loadTemplate('example')">Load Example</button>
+        </div>
+
+        <h2 style="margin-top: 0;">When Will I Reach FIRE?</h2>
+        <p style="color: #666; margin-bottom: 20px;">
+            Enter your current situation to see when you'll reach financial independence.
+        </p>
 
         <div class="input-grid">
             <div class="input-group">
-                <h3>Portfolio & Expenses</h3>
+                <h3>Current Situation</h3>
                 <div class="input-row">
-                    <label>Starting Portfolio</label>
+                    <label>Current Age</label>
+                    <input type="number" id="t1_current_age" value="40" min="18" max="80">
+                </div>
+                <div class="input-row">
+                    <label>Current Portfolio</label>
                     <div class="euro-prefix">
-                        <input type="number" id="starting_portfolio" value="1200" step="10">
+                        <input type="number" id="t1_portfolio" value="500" step="10">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <label>Annual Income</label>
+                    <div class="euro-prefix">
+                        <input type="number" id="t1_income" value="60" step="1">
                     </div>
                 </div>
                 <div class="input-row">
                     <label>Annual Expenses</label>
                     <div class="euro-prefix">
-                        <input type="number" id="annual_expenses" value="32.5" step="0.5">
+                        <input type="number" id="t1_expenses" value="30" step="0.5">
                     </div>
+                </div>
+                <div class="input-row" style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd;">
+                    <label style="color: #27ae60;">Annual Savings</label>
+                    <div style="font-weight: bold; color: #27ae60;" id="t1_savings_display">€30k</div>
                 </div>
             </div>
 
             <div class="input-group">
-                <h3>Income Phases (per year)</h3>
+                <h3>Post-FIRE Income</h3>
                 <div class="input-row">
-                    <label>RGT + Trading (47-57)</label>
+                    <label>Avg. annual income after FIRE</label>
                     <div class="euro-prefix">
-                        <input type="number" id="income_rgt" value="17" step="1">
+                        <input type="number" id="t1_post_fire_income" value="10" step="1">
                     </div>
                 </div>
-                <div class="input-row">
-                    <label>Trading only (58-64)</label>
-                    <div class="euro-prefix">
-                        <input type="number" id="income_trading" value="10" step="1">
-                    </div>
-                </div>
-                <div class="input-row">
-                    <label>Kansaneläke (65+)</label>
-                    <div class="euro-prefix">
-                        <input type="number" id="income_pension" value="8.4" step="0.1">
-                    </div>
+                <div style="font-size: 0.8em; color: #888; margin-top: 8px;">
+                    Expected average from pensions, part-time work, rentals, etc.
                 </div>
             </div>
 
             <div class="input-group">
-                <h3>Windfalls</h3>
+                <h3>Target & Assumptions</h3>
                 <div class="input-row">
-                    <label>Inheritance (age 55)</label>
-                    <div class="euro-prefix">
-                        <input type="number" id="inheritance" value="200" step="10">
-                    </div>
-                </div>
-                <div class="input-row">
-                    <label>RGT Liquidation (age 58)</label>
-                    <div class="euro-prefix">
-                        <input type="number" id="rgt_liquidation" value="60" step="5">
-                    </div>
-                </div>
-            </div>
-
-            <div class="input-group">
-                <h3>Emergency Responses</h3>
-                <div class="input-row">
-                    <label>Hustle Income (if triggered)</label>
-                    <div class="euro-prefix">
-                        <input type="number" id="hustle_income" value="40" step="5">
-                    </div>
-                </div>
-                <div class="input-row">
-                    <label>Reduced Spending</label>
-                    <div class="euro-prefix">
-                        <input type="number" id="reduced_spending" value="25" step="1">
-                    </div>
-                </div>
-                <div class="input-row">
-                    <label>Lean Spending</label>
-                    <div class="euro-prefix">
-                        <input type="number" id="lean_spending" value="17" step="1">
-                    </div>
-                </div>
-            </div>
-
-            <div class="input-group">
-                <h3>Time Horizon</h3>
-                <div class="input-row">
-                    <label>Start Age (FIRE)</label>
-                    <input type="number" id="start_age" value="47" min="30" max="60">
-                </div>
-                <div class="input-row">
-                    <label>End Age (survival)</label>
-                    <input type="number" id="end_age" value="95" min="70" max="110">
-                </div>
-                <div class="input-row">
-                    <label>Inheritance Age</label>
-                    <input type="number" id="inheritance_age" value="55" min="47" max="90">
-                </div>
-                <div class="input-row">
-                    <label>Pension Start Age</label>
-                    <input type="number" id="pension_start_age" value="65" min="60" max="75">
-                </div>
-            </div>
-
-            <div class="input-group">
-                <h3>Investment Assumptions</h3>
-                <div class="input-row">
-                    <label>Expected Return</label>
+                    <label>Target Certainty</label>
                     <div class="pct-suffix">
-                        <input type="number" id="expected_return" value="6" step="0.5" min="0" max="15">
+                        <input type="number" id="t1_target_certainty" value="95" min="80" max="99">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <label>Plan Until Age</label>
+                    <input type="number" id="t1_end_age" value="95" min="70" max="110">
+                </div>
+                <div class="input-row">
+                    <label>Expected Return (nominal)</label>
+                    <div class="pct-suffix">
+                        <input type="number" id="t1_expected_return" value="6" step="0.5" min="0" max="15">
                     </div>
                 </div>
                 <div class="input-row">
                     <label>Inflation</label>
                     <div class="pct-suffix">
-                        <input type="number" id="inflation" value="2" step="0.5" min="0" max="10">
+                        <input type="number" id="t1_inflation" value="2" step="0.5" min="0" max="10">
                     </div>
                 </div>
                 <div class="input-row">
-                    <label>Volatility (std dev)</label>
+                    <label>Volatility</label>
                     <div class="pct-suffix">
-                        <input type="number" id="volatility" value="15" step="1" min="5" max="30">
+                        <input type="number" id="t1_volatility" value="15" step="1" min="5" max="30">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="run-section">
+            <button class="primary-btn" id="runAssessment">Check My FIRE Status</button>
+            <span id="assessment-status"></span>
+        </div>
+
+        <div id="assessment-result"></div>
+    </div>
+
+    <!-- Tab 2: Future Scenarios -->
+    <div id="tab-scenarios" class="tab-content" style="display: none;">
+        <div class="template-section">
+            <button class="template-btn" onclick="loadTemplate('blank')">Start Fresh</button>
+            <button class="template-btn example" onclick="loadTemplate('example')">Load Example</button>
+        </div>
+
+        <h2 style="margin-top: 0;">Plan Future Scenarios</h2>
+        <p style="color: #666; margin-bottom: 20px;">
+            Model your complete financial future with income phases, windfalls, and emergency strategies.
+        </p>
+
+        <div class="input-grid">
+            <div class="input-group">
+                <h3>Portfolio & Expenses <span class="tooltip-icon" onclick="showTooltip('portfolio')">?</span></h3>
+                <div class="input-row">
+                    <label>Starting Portfolio</label>
+                    <div class="euro-prefix">
+                        <input type="number" id="t2_starting_portfolio" value="500" step="10">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <label>Annual Expenses</label>
+                    <div class="euro-prefix">
+                        <input type="number" id="t2_annual_expenses" value="30" step="0.5">
                     </div>
                 </div>
             </div>
 
             <div class="input-group">
-                <h3>Emergency Hustle Rules</h3>
+                <h3>Time Horizon <span class="tooltip-icon" onclick="showTooltip('time')">?</span></h3>
+                <div class="input-row">
+                    <label>Start Age</label>
+                    <input type="number" id="t2_start_age" value="40" min="18" max="80">
+                </div>
+                <div class="input-row" id="end_age_manual_row">
+                    <label>End Age</label>
+                    <input type="number" id="t2_end_age" value="95" min="70" max="110">
+                </div>
+                <div class="input-row" id="end_age_dynamic_row" style="display: none;">
+                    <label>Simulates to Age</label>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <span id="dynamic_end_age_display" style="font-size: 1.2em; font-weight: bold; color: #a8d8ea;">Calculating...</span>
+                        <span id="dynamic_le_display" style="font-size: 0.85em; color: #888;">Life expectancy: ...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <h3>Investment Assumptions <span class="tooltip-icon" onclick="showTooltip('investment')">?</span></h3>
+                <div class="input-row">
+                    <label>Expected Return (nominal)</label>
+                    <div class="pct-suffix">
+                        <input type="number" id="t2_expected_return" value="6" step="0.5" min="0" max="15">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <label>Inflation</label>
+                    <div class="pct-suffix">
+                        <input type="number" id="t2_inflation" value="2" step="0.5" min="0" max="10">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <label>Volatility</label>
+                    <div class="pct-suffix">
+                        <input type="number" id="t2_volatility" value="15" step="1" min="5" max="30">
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <h3>
+                    Income Phases <span class="tooltip-icon" onclick="showTooltip('income')">?</span>
+                    <button class="add-btn" id="add-income-phase" onclick="openIncomePhaseModal()">+ Add</button>
+                </h3>
+                <div class="summary-list" id="income-phases-list">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+
+            <div class="input-group">
+                <h3>
+                    Windfalls <span class="tooltip-icon" onclick="showTooltip('windfalls')">?</span>
+                    <button class="add-btn" id="add-windfall" onclick="openWindfallModal()">+ Add</button>
+                </h3>
+                <div class="summary-list" id="windfalls-list">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+
+            <div class="input-group">
+                <h3>Emergency Hustle <span class="tooltip-icon" onclick="showTooltip('hustle')">?</span></h3>
+                <div class="input-row">
+                    <label>Enable</label>
+                    <input type="checkbox" id="t2_hustle_enabled" checked style="width: auto;">
+                </div>
+                <div class="input-row">
+                    <label>Extra Income (if triggered)</label>
+                    <div class="euro-prefix">
+                        <input type="number" id="t2_hustle_income" value="40" step="5">
+                    </div>
+                </div>
                 <div class="input-row">
                     <label>Trigger until age</label>
-                    <input type="number" id="hustle_trigger_age_max" value="52" min="47" max="65">
+                    <input type="number" id="t2_hustle_trigger_age" value="52" min="30" max="70">
                 </div>
                 <div class="input-row">
                     <label>Duration (years)</label>
-                    <input type="number" id="hustle_duration" value="3" min="1" max="10">
+                    <input type="number" id="t2_hustle_duration" value="3" min="1" max="10">
                 </div>
                 <div class="input-row">
                     <label>Portfolio threshold</label>
                     <div class="pct-suffix">
-                        <input type="number" id="hustle_portfolio_threshold" value="70" step="5" min="30" max="90">
+                        <input type="number" id="t2_hustle_threshold" value="70" step="5" min="30" max="90">
                     </div>
                 </div>
             </div>
 
             <div class="input-group">
-                <h3>Spending Rules</h3>
+                <h3>Spending Rules <span class="tooltip-icon" onclick="showTooltip('spending')">?</span></h3>
+                <div class="input-row">
+                    <label>Enable</label>
+                    <input type="checkbox" id="t2_spending_enabled" checked style="width: auto;">
+                </div>
+                <div class="input-row">
+                    <label>Reduced Spending</label>
+                    <div class="euro-prefix">
+                        <input type="number" id="t2_reduced_spending" value="25" step="1">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <label>Lean Spending</label>
+                    <div class="euro-prefix">
+                        <input type="number" id="t2_lean_spending" value="17" step="1">
+                    </div>
+                </div>
                 <div class="input-row">
                     <label>Drop threshold</label>
                     <div class="pct-suffix">
-                        <input type="number" id="spending_drop_threshold" value="50" step="5" min="20" max="80">
+                        <input type="number" id="t2_drop_threshold" value="50" step="5" min="20" max="80">
                     </div>
                 </div>
                 <div class="input-row">
                     <label>Recovery threshold</label>
                     <div class="pct-suffix">
-                        <input type="number" id="spending_recovery_threshold" value="60" step="5" min="30" max="90">
+                        <input type="number" id="t2_recovery_threshold" value="60" step="5" min="30" max="90">
                     </div>
                 </div>
                 <div class="input-row">
                     <label>Lean mode age</label>
-                    <input type="number" id="lean_age" value="60" min="50" max="75">
+                    <input type="number" id="t2_lean_age" value="60" min="40" max="80">
                 </div>
             </div>
 
             <div class="input-group">
-                <h3>Mortality Modeling</h3>
+                <h3>Mortality Modeling <span class="tooltip-icon" onclick="showTooltip('mortality')">?</span></h3>
                 <div class="input-row">
-                    <label>Healthy lifestyle factor</label>
-                    <input type="number" id="healthy_lifestyle_factor" value="0.65" step="0.05" min="0.4" max="1.0">
+                    <label>Enable</label>
+                    <input type="checkbox" id="t2_mortality_enabled" checked style="width: auto;">
+                </div>
+                <div class="input-row">
+                    <label>Your health outlook</label>
+                    <select id="t2_health_class" style="width: 100%; padding: 8px; background: #444; color: white; border: 1px solid #555; border-radius: 4px;">
+                        <option value="excellent">Excellent - healthy lifestyle, no conditions, family longevity</option>
+                        <option value="average" selected>Average - general population</option>
+                        <option value="impaired">Below average - chronic conditions or health concerns</option>
+                    </select>
+                </div>
+                <div class="input-row">
+                    <label>Medical advances assumption</label>
+                    <select id="t2_tech_scenario" style="width: 100%; padding: 8px; background: #444; color: white; border: 1px solid #555; border-radius: 4px;">
+                        <option value="conservative">Conservative - improvement slows (+1-2 years LE)</option>
+                        <option value="moderate" selected>Moderate - continue recent trends (+2-3 years LE)</option>
+                        <option value="optimistic">Optimistic - advances accelerate (+4-5 years LE)</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -514,32 +1076,39 @@
         </div>
 
         <div class="run-section">
-            <button id="runSimulation">Run Simulation</button>
+            <button class="primary-btn" id="runSimulation">Run Monte Carlo</button>
+            <button class="primary-btn historical-btn" id="runHistorical">Run Historical</button>
+            <button class="primary-btn mortality-btn" id="runHistoricalMortality">Historical + Mortality</button>
+            <button class="primary-btn stress-btn" id="runStressTests">Run ALL Stress Tests</button>
             <span id="status"></span>
         </div>
     </div>
 
-    <!-- Initial message -->
-    <div id="initialMessage" class="initial-message">
-        Adjust the parameters above and click <strong>Run Simulation</strong> to see results.
+    <!-- Stress Test Results -->
+    <div id="stress-results" style="display: none;">
+        <h2 style="border-bottom: 3px solid #e74c3c; padding-bottom: 10px; margin-bottom: 20px;">
+            Stress Test Scenarios
+        </h2>
+        <p class="stress-intro">
+            These scenarios test your plan against historical crises and hypothetical worst-case conditions.
+            A robust plan should survive most scenarios. Pay attention to which scenarios cause failures
+            and consider whether those risks are acceptable to you.
+        </p>
+        <div id="stress-scenarios-container">
+            <!-- Dynamically generated scenario cards -->
+        </div>
     </div>
 
-    <!-- Results (hidden initially) -->
-    <div id="results">
-        <!-- Mortality-Adjusted Results -->
+    <!-- Tab 2 Results (shown below tab when simulation runs) -->
+    <div id="tab2-results">
+        <div class="method-header" id="methodHeader"></div>
         <div class="mortality-section" id="mortalitySection"></div>
-
-        <!-- Summary Stats -->
-        <h2>Portfolio Success (Ignoring Mortality)</h2>
+        <h2 id="resultsTitle">Portfolio Success</h2>
         <div class="summary-grid" id="summary"></div>
-
-        <!-- Parameters -->
         <div class="params-section">
             <h3>Simulation Parameters</h3>
             <div class="params-grid" id="params"></div>
         </div>
-
-        <!-- Fan Chart -->
         <h2>Portfolio Trajectories (All Percentiles)</h2>
         <div class="chart-container">
             <canvas id="fanChart"></canvas>
@@ -548,8 +1117,6 @@
                 Middle line (50th percentile) = median outcome. Outer edges = best/worst 5%.
             </div>
         </div>
-
-        <!-- Failure Chart -->
         <h2>Failure Analysis (Bottom 5%)</h2>
         <div class="chart-container">
             <canvas id="failureChart"></canvas>
@@ -557,126 +1124,834 @@
                 Each line represents a simulation that ran out of money. Earlier failures (steeper drops) are more concerning.
             </div>
         </div>
-
-        <!-- Close Calls -->
         <h2>Close Calls (Survived but Scary)</h2>
         <div class="chart-container">
             <canvas id="closeCallChart"></canvas>
         </div>
-
-        <!-- Failure List -->
         <h2>Failure Details</h2>
         <div class="failure-list" id="failureList"></div>
     </div>
 
+    <!-- Legacy/Charity Trade-off Section -->
+    <div id="legacy-section" class="tab-content" style="display: none; margin-top: 20px;">
+        <h2 style="border-bottom: 3px solid #16a085; padding-bottom: 10px;">Security vs. Giving Capacity</h2>
+        <p style="color: #666; margin-bottom: 20px;">
+            This chart shows the trade-off between personal financial security and potential giving/legacy capacity.
+            Higher portfolio = higher success rate but more wealth "locked up" in safety buffer.
+        </p>
+        <div class="run-section" style="margin-bottom: 20px;">
+            <button class="primary-btn mortality-btn" id="runTradeoff">Calculate Trade-off Curve</button>
+            <span id="tradeoffStatus"></span>
+        </div>
+        <div id="tradeoff-results" style="display: none;">
+            <div class="summary-grid" id="tradeoffSummary"></div>
+            <div class="chart-container">
+                <canvas id="tradeoffChart"></canvas>
+            </div>
+            <div class="tradeoff-table" id="tradeoffTable"></div>
+        </div>
+    </div>
+
+    <!-- Income Phase Modal -->
+    <div class="modal-overlay" id="incomePhaseModal">
+        <div class="modal">
+            <h3 id="incomePhaseModalTitle">Add Income Phase</h3>
+            <div class="modal-field">
+                <label>Name</label>
+                <input type="text" id="modal_phase_name" placeholder="e.g., Part-time work, Pension">
+            </div>
+            <div class="modal-field">
+                <label>Start Age</label>
+                <input type="number" id="modal_phase_start" placeholder="e.g., 47">
+                <div class="hint">When this income begins</div>
+            </div>
+            <div class="modal-field">
+                <label>End Age</label>
+                <input type="number" id="modal_phase_end" placeholder="e.g., 65">
+                <div class="hint">When this income stops</div>
+            </div>
+            <div class="modal-field">
+                <label>Annual Amount (€k)</label>
+                <input type="number" id="modal_phase_amount" placeholder="e.g., 15" step="0.5">
+                <div class="hint">Gross income per year in thousands of euros</div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn delete" id="deletePhaseBtn" onclick="deleteIncomePhase()" style="display: none;">Delete</button>
+                <button class="modal-btn cancel" onclick="closeIncomePhaseModal()">Cancel</button>
+                <button class="modal-btn save" onclick="saveIncomePhase()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Windfall Modal -->
+    <div class="modal-overlay" id="windfallModal">
+        <div class="modal">
+            <h3 id="windfallModalTitle">Add Windfall</h3>
+            <div class="modal-field">
+                <label>Name</label>
+                <input type="text" id="modal_windfall_name" placeholder="e.g., Inheritance, Property sale">
+            </div>
+            <div class="modal-field">
+                <label>Age</label>
+                <input type="number" id="modal_windfall_age" placeholder="e.g., 55">
+                <div class="hint">When you expect to receive this</div>
+            </div>
+            <div class="modal-field">
+                <label>Amount (€k)</label>
+                <input type="number" id="modal_windfall_amount" placeholder="e.g., 100" step="1">
+                <div class="hint">Total amount in thousands of euros</div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn delete" id="deleteWindfallBtn" onclick="deleteWindfall()" style="display: none;">Delete</button>
+                <button class="modal-btn cancel" onclick="closeWindfallModal()">Cancel</button>
+                <button class="modal-btn save" onclick="saveWindfall()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip Overlay -->
+    <div class="tooltip-overlay" id="tooltipOverlay" onclick="if(event.target === this) closeTooltip()">
+        <div class="tooltip-popup">
+            <button class="tooltip-close" onclick="closeTooltip()">×</button>
+            <h4 id="tooltipTitle">Title</h4>
+            <div id="tooltipContent"></div>
+        </div>
+    </div>
+
     <script>
+        // =================================================================
+        // STATE MANAGEMENT
+        // =================================================================
+        const formState = {
+            incomePhases: [],
+            windfalls: [],
+            maxPhases: 5,
+            maxWindfalls: 5
+        };
+
         // Global chart references
         let fanChart = null;
         let failureChart = null;
         let closeCallChart = null;
+        let stressCharts = {};  // Maps scenario_id -> Chart instance
 
-        // Update slider display
-        document.getElementById('num_simulations').addEventListener('input', (e) => {
-            document.getElementById('simCount').textContent = e.target.value;
+        // =================================================================
+        // TOOLTIP SYSTEM
+        // =================================================================
+        const tooltipContent = {
+            portfolio: {
+                title: 'Portfolio & Expenses',
+                content: `
+                    <p><strong>Starting Portfolio</strong> is your total investment portfolio value at retirement (in €k thousands). Include stocks, bonds, and other liquid investments.</p>
+                    <p><strong>Annual Expenses</strong> is your expected yearly spending in retirement (in €k). This should cover housing, food, healthcare, travel, and any recurring costs.</p>
+                    <div class="tip-example">
+                        <strong>Example:</strong> €500k portfolio with €30k expenses gives a 16.7x multiple, or a 6% withdrawal rate.
+                    </div>
+                `
+            },
+            time: {
+                title: 'Time Horizon',
+                content: `
+                    <p><strong>Start Age</strong> is when you begin your retirement or FIRE journey.</p>
+                    <p><strong>End Age</strong> determines how long to simulate. With mortality modeling enabled, this is calculated automatically based on when survival probability drops below 1%.</p>
+                    <div class="tip-example">
+                        <strong>Tip:</strong> Enable mortality modeling to have the simulator automatically determine a realistic endpoint based on your health and medical technology assumptions.
+                    </div>
+                `
+            },
+            investment: {
+                title: 'Investment Assumptions',
+                content: `
+                    <p><strong>Expected Return</strong> is the nominal (before inflation) annual return you expect. Historical S&P 500 averages ~10%, but a global diversified portfolio might average 6-8%.</p>
+                    <p><strong>Inflation</strong> erodes purchasing power over time. Historical average is ~2-3%.</p>
+                    <p><strong>Volatility</strong> measures how much returns vary year to year. Higher volatility = more uncertainty. Stocks typically have 15-20% volatility.</p>
+                    <div class="tip-example">
+                        <strong>Real return = Nominal - Inflation.</strong> With 6% nominal and 2% inflation, your real return is 4%.
+                    </div>
+                `
+            },
+            income: {
+                title: 'Income Phases',
+                content: `
+                    <p>Model income that varies by age. Add multiple phases to capture different periods of your retirement.</p>
+                    <p>Each phase has a <strong>name</strong>, <strong>start age</strong>, <strong>end age</strong>, and <strong>annual amount</strong>.</p>
+                    <div class="tip-example">
+                        <strong>Examples:</strong><br>
+                        • Part-time work: Age 47-55, €15k/year<br>
+                        • State pension: Age 65+, €18k/year<br>
+                        • Rental income: Age 50-80, €8k/year
+                    </div>
+                `
+            },
+            windfalls: {
+                title: 'Windfalls',
+                content: `
+                    <p>One-time additions to your portfolio at specific ages. These get added directly to your portfolio value.</p>
+                    <div class="tip-example">
+                        <strong>Examples:</strong><br>
+                        • Inheritance: Age 55, €100k<br>
+                        • Property sale: Age 60, €150k<br>
+                        • Business exit: Age 52, €200k
+                    </div>
+                `
+            },
+            hustle: {
+                title: 'Emergency Hustle',
+                content: `
+                    <p>Model the ability to return to work temporarily if your portfolio crashes early in retirement.</p>
+                    <p><strong>Trigger age</strong> - You can only hustle if you're younger than this.</p>
+                    <p><strong>Portfolio threshold</strong> - Hustle triggers when portfolio drops below this % of starting value.</p>
+                    <p><strong>Duration</strong> - How many years you'd work if triggered.</p>
+                    <div class="tip-example">
+                        <strong>Example:</strong> If your €500k portfolio drops below 70% (€350k) before age 52, you work for 3 years earning €40k/year.
+                    </div>
+                `
+            },
+            spending: {
+                title: 'Spending Rules',
+                content: `
+                    <p>Automatically reduce spending when your portfolio drops, mimicking real human behavior during market downturns.</p>
+                    <p><strong>Drop threshold</strong> - Switch to reduced spending when portfolio falls below this % of starting value.</p>
+                    <p><strong>Recovery threshold</strong> - Return to normal spending when portfolio recovers above this %.</p>
+                    <p><strong>Lean mode</strong> - After a certain age, you can cut spending even further if needed.</p>
+                    <div class="tip-example">
+                        <strong>Example:</strong> Normal €30k → Reduced €25k (when portfolio drops 50%) → Lean €17k (after age 60).
+                    </div>
+                `
+            },
+            mortality: {
+                title: 'Mortality Modeling',
+                content: `
+                    <p>Model realistic lifespans based on Finnish male mortality data, adjusted for your health and future medical advances.</p>
+                    <p><strong>Health outlook</strong> affects your personal mortality rate. "Excellent" assumes healthy lifestyle and family longevity. "Impaired" accounts for chronic conditions.</p>
+                    <p><strong>Medical advances</strong> models future improvements in healthcare. "Conservative" assumes improvement slows; "Optimistic" assumes acceleration from AI/biotech.</p>
+                    <div class="tip-example">
+                        <strong>Impact:</strong> The combination can shift life expectancy by 7-10 years. Excellent+Optimistic might simulate to age 99, while Impaired+Conservative might end at age 93.
+                    </div>
+                `
+            }
+        };
+
+        function showTooltip(key) {
+            const content = tooltipContent[key];
+            if (!content) return;
+
+            document.getElementById('tooltipTitle').textContent = content.title;
+            document.getElementById('tooltipContent').innerHTML = content.content;
+            document.getElementById('tooltipOverlay').classList.add('active');
+        }
+
+        function closeTooltip() {
+            document.getElementById('tooltipOverlay').classList.remove('active');
+        }
+
+        // Close tooltip on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeTooltip();
+            }
         });
 
-        // Format currency
+        // =================================================================
+        // TEMPLATES
+        // =================================================================
+        const TEMPLATES = {
+            blank: {
+                name: 'Start Fresh',
+                currentAge: 40,
+                portfolio: 500,
+                income: 60,
+                expenses: 30,
+                postFireIncome: 10,
+                targetCertainty: 95,
+                endAge: 95,
+                expectedReturn: 6,
+                inflation: 2,
+                volatility: 15,
+                incomePhases: [],
+                windfalls: [],
+                hustleEnabled: false,
+                hustleIncome: 40,
+                hustleTriggerAge: 52,
+                hustleDuration: 3,
+                hustleThreshold: 70,
+                spendingEnabled: false,
+                reducedSpending: 25,
+                leanSpending: 17,
+                dropThreshold: 50,
+                recoveryThreshold: 60,
+                leanAge: 60,
+                mortalityEnabled: false,
+                healthClass: 'average',
+                techScenario: 'moderate'
+            },
+            example: {
+                name: 'Example: Finnish Tech Worker',
+                currentAge: 47,
+                portfolio: 1200,
+                income: 17,  // Already FIRE - RGT income only
+                expenses: 32.5,
+                postFireIncome: 8.4,  // Kansaneläke average
+                targetCertainty: 95,
+                endAge: 95,
+                expectedReturn: 6,
+                inflation: 2,
+                volatility: 15,
+                incomePhases: [
+                    { name: 'RGT + Trading', start_age: 47, end_age: 57, amount: 17 },
+                    { name: 'Trading only', start_age: 58, end_age: 64, amount: 10 },
+                    { name: 'Kansaneläke', start_age: 65, end_age: 95, amount: 8.4 }
+                ],
+                windfalls: [
+                    { name: 'Inheritance', age: 55, amount: 200 },
+                    { name: 'RGT Liquidation', age: 58, amount: 60 }
+                ],
+                hustleEnabled: true,
+                hustleIncome: 40,
+                hustleTriggerAge: 52,
+                hustleDuration: 3,
+                hustleThreshold: 70,
+                spendingEnabled: true,
+                reducedSpending: 25,
+                leanSpending: 17,
+                dropThreshold: 50,
+                recoveryThreshold: 60,
+                leanAge: 60,
+                mortalityEnabled: true,
+                healthClass: 'excellent',
+                techScenario: 'moderate'
+            }
+        };
+
+        function loadTemplate(key) {
+            const t = TEMPLATES[key];
+            if (!t) return;
+
+            // Tab 1 fields
+            document.getElementById('t1_current_age').value = t.currentAge;
+            document.getElementById('t1_portfolio').value = t.portfolio;
+            document.getElementById('t1_income').value = t.income;
+            document.getElementById('t1_expenses').value = t.expenses;
+            document.getElementById('t1_post_fire_income').value = t.postFireIncome;
+            document.getElementById('t1_target_certainty').value = t.targetCertainty;
+            document.getElementById('t1_end_age').value = t.endAge;
+            document.getElementById('t1_expected_return').value = t.expectedReturn;
+            document.getElementById('t1_inflation').value = t.inflation;
+            document.getElementById('t1_volatility').value = t.volatility;
+            updateSavingsDisplay();
+
+            // Tab 2 fields
+            document.getElementById('t2_starting_portfolio').value = t.portfolio;
+            document.getElementById('t2_annual_expenses').value = t.expenses;
+            document.getElementById('t2_start_age').value = t.currentAge;
+            document.getElementById('t2_end_age').value = t.endAge;
+            document.getElementById('t2_expected_return').value = t.expectedReturn;
+            document.getElementById('t2_inflation').value = t.inflation;
+            document.getElementById('t2_volatility').value = t.volatility;
+
+            document.getElementById('t2_hustle_enabled').checked = t.hustleEnabled;
+            document.getElementById('t2_hustle_income').value = t.hustleIncome;
+            document.getElementById('t2_hustle_trigger_age').value = t.hustleTriggerAge;
+            document.getElementById('t2_hustle_duration').value = t.hustleDuration;
+            document.getElementById('t2_hustle_threshold').value = t.hustleThreshold;
+
+            document.getElementById('t2_spending_enabled').checked = t.spendingEnabled;
+            document.getElementById('t2_reduced_spending').value = t.reducedSpending;
+            document.getElementById('t2_lean_spending').value = t.leanSpending;
+            document.getElementById('t2_drop_threshold').value = t.dropThreshold;
+            document.getElementById('t2_recovery_threshold').value = t.recoveryThreshold;
+            document.getElementById('t2_lean_age').value = t.leanAge;
+
+            document.getElementById('t2_mortality_enabled').checked = t.mortalityEnabled;
+            document.getElementById('t2_health_class').value = t.healthClass;
+            document.getElementById('t2_tech_scenario').value = t.techScenario;
+
+            // Dynamic lists
+            formState.incomePhases = t.incomePhases.map(p => ({...p}));
+            formState.windfalls = t.windfalls.map(w => ({...w}));
+            renderIncomePhases();
+            renderWindfalls();
+        }
+
+        // =================================================================
+        // TAB NAVIGATION
+        // =================================================================
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.style.display = 'none';
+            });
+            document.querySelectorAll('.tab-button').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(`tab-${tabName}`).style.display = 'block';
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+            // Sync data if going to scenarios tab
+            if (tabName === 'scenarios') {
+                syncToTab2();
+            }
+
+            // Hide results when switching tabs
+            document.getElementById('tab2-results').style.display = 'none';
+
+            // Show/hide legacy section based on tab
+            const legacySection = document.getElementById('legacy-section');
+            if (tabName === 'scenarios') {
+                legacySection.style.display = 'block';
+            } else {
+                legacySection.style.display = 'none';
+            }
+        }
+
+        function syncToTab2() {
+            // Copy common fields from Tab 1 to Tab 2
+            const age = document.getElementById('t1_current_age').value;
+            const portfolio = document.getElementById('t1_portfolio').value;
+            const expenses = document.getElementById('t1_expenses').value;
+            const endAge = document.getElementById('t1_end_age').value;
+            const ret = document.getElementById('t1_expected_return').value;
+            const inf = document.getElementById('t1_inflation').value;
+            const vol = document.getElementById('t1_volatility').value;
+
+            document.getElementById('t2_start_age').value = age;
+            document.getElementById('t2_starting_portfolio').value = portfolio;
+            document.getElementById('t2_annual_expenses').value = expenses;
+            document.getElementById('t2_end_age').value = endAge;
+            document.getElementById('t2_expected_return').value = ret;
+            document.getElementById('t2_inflation').value = inf;
+            document.getElementById('t2_volatility').value = vol;
+        }
+
+        // =================================================================
+        // INCOME PHASE MODAL
+        // =================================================================
+        let editingPhaseIndex = null;
+
+        function openIncomePhaseModal(index = null) {
+            if (index === null && formState.incomePhases.length >= formState.maxPhases) {
+                alert('Maximum 5 income phases allowed');
+                return;
+            }
+
+            editingPhaseIndex = index;
+            const modal = document.getElementById('incomePhaseModal');
+            const title = document.getElementById('incomePhaseModalTitle');
+            const deleteBtn = document.getElementById('deletePhaseBtn');
+
+            if (index !== null) {
+                // Editing existing
+                const p = formState.incomePhases[index];
+                title.textContent = 'Edit Income Phase';
+                document.getElementById('modal_phase_name').value = p.name || '';
+                document.getElementById('modal_phase_start').value = p.start_age || '';
+                document.getElementById('modal_phase_end').value = p.end_age || '';
+                document.getElementById('modal_phase_amount').value = p.amount || '';
+                deleteBtn.style.display = 'block';
+            } else {
+                // Adding new
+                title.textContent = 'Add Income Phase';
+                document.getElementById('modal_phase_name').value = '';
+                document.getElementById('modal_phase_start').value = '';
+                document.getElementById('modal_phase_end').value = '';
+                document.getElementById('modal_phase_amount').value = '';
+                deleteBtn.style.display = 'none';
+            }
+
+            modal.classList.add('active');
+            document.getElementById('modal_phase_name').focus();
+        }
+
+        function closeIncomePhaseModal() {
+            document.getElementById('incomePhaseModal').classList.remove('active');
+            editingPhaseIndex = null;
+        }
+
+        function saveIncomePhase() {
+            const name = document.getElementById('modal_phase_name').value.trim();
+            const start_age = document.getElementById('modal_phase_start').value;
+            const end_age = document.getElementById('modal_phase_end').value;
+            const amount = document.getElementById('modal_phase_amount').value;
+
+            if (!start_age || !end_age || !amount) {
+                alert('Please fill in Start Age, End Age, and Amount');
+                return;
+            }
+
+            const phase = {
+                name: name || 'Income',
+                start_age: parseInt(start_age),
+                end_age: parseInt(end_age),
+                amount: parseFloat(amount)
+            };
+
+            if (editingPhaseIndex !== null) {
+                formState.incomePhases[editingPhaseIndex] = phase;
+            } else {
+                formState.incomePhases.push(phase);
+            }
+
+            renderIncomePhases();
+            closeIncomePhaseModal();
+        }
+
+        function deleteIncomePhase() {
+            if (editingPhaseIndex !== null) {
+                formState.incomePhases.splice(editingPhaseIndex, 1);
+                renderIncomePhases();
+                closeIncomePhaseModal();
+            }
+        }
+
+        function renderIncomePhases() {
+            const container = document.getElementById('income-phases-list');
+            if (formState.incomePhases.length === 0) {
+                container.innerHTML = '<div class="no-items">No income phases. Click "+ Add" to add one.</div>';
+            } else {
+                container.innerHTML = formState.incomePhases.map((p, i) => `
+                    <div class="summary-item" onclick="openIncomePhaseModal(${i})">
+                        <div class="summary-text">
+                            <div class="summary-name">${p.name || 'Income'}</div>
+                            <div class="summary-details">Age ${p.start_age}–${p.end_age} · €${p.amount}k/year</div>
+                        </div>
+                        <span class="edit-hint">click to edit</span>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('add-income-phase').disabled =
+                formState.incomePhases.length >= formState.maxPhases;
+        }
+
+        // =================================================================
+        // WINDFALL MODAL
+        // =================================================================
+        let editingWindfallIndex = null;
+
+        function openWindfallModal(index = null) {
+            if (index === null && formState.windfalls.length >= formState.maxWindfalls) {
+                alert('Maximum 5 windfalls allowed');
+                return;
+            }
+
+            editingWindfallIndex = index;
+            const modal = document.getElementById('windfallModal');
+            const title = document.getElementById('windfallModalTitle');
+            const deleteBtn = document.getElementById('deleteWindfallBtn');
+
+            if (index !== null) {
+                // Editing existing
+                const w = formState.windfalls[index];
+                title.textContent = 'Edit Windfall';
+                document.getElementById('modal_windfall_name').value = w.name || '';
+                document.getElementById('modal_windfall_age').value = w.age || '';
+                document.getElementById('modal_windfall_amount').value = w.amount || '';
+                deleteBtn.style.display = 'block';
+            } else {
+                // Adding new
+                title.textContent = 'Add Windfall';
+                document.getElementById('modal_windfall_name').value = '';
+                document.getElementById('modal_windfall_age').value = '';
+                document.getElementById('modal_windfall_amount').value = '';
+                deleteBtn.style.display = 'none';
+            }
+
+            modal.classList.add('active');
+            document.getElementById('modal_windfall_name').focus();
+        }
+
+        function closeWindfallModal() {
+            document.getElementById('windfallModal').classList.remove('active');
+            editingWindfallIndex = null;
+        }
+
+        function saveWindfall() {
+            const name = document.getElementById('modal_windfall_name').value.trim();
+            const age = document.getElementById('modal_windfall_age').value;
+            const amount = document.getElementById('modal_windfall_amount').value;
+
+            if (!age || !amount) {
+                alert('Please fill in Age and Amount');
+                return;
+            }
+
+            const windfall = {
+                name: name || 'Windfall',
+                age: parseInt(age),
+                amount: parseFloat(amount)
+            };
+
+            if (editingWindfallIndex !== null) {
+                formState.windfalls[editingWindfallIndex] = windfall;
+            } else {
+                formState.windfalls.push(windfall);
+            }
+
+            renderWindfalls();
+            closeWindfallModal();
+        }
+
+        function deleteWindfall() {
+            if (editingWindfallIndex !== null) {
+                formState.windfalls.splice(editingWindfallIndex, 1);
+                renderWindfalls();
+                closeWindfallModal();
+            }
+        }
+
+        function renderWindfalls() {
+            const container = document.getElementById('windfalls-list');
+            if (formState.windfalls.length === 0) {
+                container.innerHTML = '<div class="no-items">No windfalls. Click "+ Add" to add one.</div>';
+            } else {
+                container.innerHTML = formState.windfalls.map((w, i) => `
+                    <div class="summary-item" onclick="openWindfallModal(${i})">
+                        <div class="summary-text">
+                            <div class="summary-name">${w.name || 'Windfall'}</div>
+                            <div class="summary-details">Age ${w.age} · €${w.amount}k</div>
+                        </div>
+                        <span class="edit-hint">click to edit</span>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('add-windfall').disabled =
+                formState.windfalls.length >= formState.maxWindfalls;
+        }
+
+        // =================================================================
+        // HELPERS
+        // =================================================================
         function formatCurrency(amount) {
             return '€' + Math.round(amount).toLocaleString();
         }
 
-        // Get input value as integer
-        // Get euro input value (stored in thousands, convert to full amount)
-        function getInputValue(id) {
-            return Math.round(parseFloat(document.getElementById(id).value) * 1000) || 0;
+        // Update savings display when income/expenses change
+        function updateSavingsDisplay() {
+            const income = parseFloat(document.getElementById('t1_income').value) || 0;
+            const expenses = parseFloat(document.getElementById('t1_expenses').value) || 0;
+            const savings = income - expenses;
+            const display = document.getElementById('t1_savings_display');
+            display.textContent = `€${savings.toFixed(1)}k`;
+            display.style.color = savings >= 0 ? '#27ae60' : '#e74c3c';
         }
 
-        // Get age/count input value (no multiplication needed)
-        function getIntValue(id) {
-            return parseInt(document.getElementById(id).value) || 0;
-        }
+        // Add listeners for savings calculation
+        document.getElementById('t1_income').addEventListener('input', updateSavingsDisplay);
+        document.getElementById('t1_expenses').addEventListener('input', updateSavingsDisplay);
 
-        // Run simulation
-        document.getElementById('runSimulation').addEventListener('click', async () => {
-            const button = document.getElementById('runSimulation');
-            const status = document.getElementById('status');
+        // =================================================================
+        // TAB 1: FIRE ASSESSMENT
+        // =================================================================
+        document.getElementById('runAssessment').addEventListener('click', async () => {
+            const button = document.getElementById('runAssessment');
+            const status = document.getElementById('assessment-status');
+            const resultDiv = document.getElementById('assessment-result');
 
-            // Disable button and show status
             button.disabled = true;
-            status.textContent = 'Running simulation...';
+            status.textContent = 'Calculating FIRE projection...';
             status.className = 'running';
 
-            const startAge = getIntValue('start_age');
-            const endAge = getIntValue('end_age');
-            const pensionAge = getIntValue('pension_start_age');
-
             const params = {
-                starting_portfolio: getInputValue('starting_portfolio'),
-                annual_expenses: getInputValue('annual_expenses'),
-                start_age: startAge,
-                end_age: endAge,
-                expected_return: parseFloat(document.getElementById('expected_return').value) / 100,
-                inflation: parseFloat(document.getElementById('inflation').value) / 100,
-                volatility: parseFloat(document.getElementById('volatility').value) / 100,
-                income_phases: [
-                    { start_age: startAge, end_age: 57, amount: getInputValue('income_rgt'), name: 'RGT + trading' },
-                    { start_age: 58, end_age: pensionAge - 1, amount: getInputValue('income_trading'), name: 'Trading only' },
-                    { start_age: pensionAge, end_age: endAge, amount: getInputValue('income_pension'), name: 'Kansaneläke' }
-                ],
-                windfalls: [
-                    { age: getIntValue('inheritance_age'), amount: getInputValue('inheritance'), name: 'Inheritance' },
-                    { age: 58, amount: getInputValue('rgt_liquidation'), name: 'RGT liquidation' }
-                ],
-                emergency_hustle: {
-                    enabled: true,
-                    trigger_age_max: getIntValue('hustle_trigger_age_max'),
-                    portfolio_threshold: parseFloat(document.getElementById('hustle_portfolio_threshold').value) / 100,
-                    extra_income: getInputValue('hustle_income'),
-                    duration: getIntValue('hustle_duration')
-                },
-                spending_rules: {
-                    enabled: true,
-                    drop_threshold: parseFloat(document.getElementById('spending_drop_threshold').value) / 100,
-                    recovery_threshold: parseFloat(document.getElementById('spending_recovery_threshold').value) / 100,
-                    reduced_spending: getInputValue('reduced_spending'),
-                    lean_spending: getInputValue('lean_spending'),
-                    lean_age: getIntValue('lean_age')
-                },
-                mortality: {
-                    enabled: true,
-                    healthy_lifestyle_factor: parseFloat(document.getElementById('healthy_lifestyle_factor').value)
-                },
-                num_simulations: getIntValue('num_simulations')
+                current_age: parseInt(document.getElementById('t1_current_age').value),
+                portfolio: Math.round(parseFloat(document.getElementById('t1_portfolio').value) * 1000),
+                annual_income: Math.round(parseFloat(document.getElementById('t1_income').value) * 1000),
+                annual_expenses: Math.round(parseFloat(document.getElementById('t1_expenses').value) * 1000),
+                post_fire_income: Math.round(parseFloat(document.getElementById('t1_post_fire_income').value) * 1000),
+                target_certainty: parseFloat(document.getElementById('t1_target_certainty').value) / 100,
+                end_age: parseInt(document.getElementById('t1_end_age').value),
+                expected_return: parseFloat(document.getElementById('t1_expected_return').value) / 100,
+                inflation: parseFloat(document.getElementById('t1_inflation').value) / 100,
+                volatility: parseFloat(document.getElementById('t1_volatility').value) / 100
             };
 
             try {
-                const startTime = Date.now();
-                const response = await fetch('api/simulate', {
+                const response = await fetch('/api/fire-assessment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(params)
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+                const data = await response.json();
+
+                if (data.fire_achieved) {
+                    const postFireNote = data.post_fire_income > 0
+                        ? `<br>Post-FIRE income: €${(data.post_fire_income/1000).toLocaleString()}k/year`
+                        : '';
+                    resultDiv.innerHTML = `
+                        <div class="assessment-result achieved">
+                            <h2>You've Reached FIRE!</h2>
+                            <div class="big-number">${(data.current_success_probability * 100).toFixed(1)}%</div>
+                            <div>Success probability (target: ${(data.target_certainty * 100).toFixed(0)}%)</div>
+                            <div class="details">
+                                Your €${(data.current_portfolio/1000).toLocaleString()}k portfolio can sustain
+                                €${(data.annual_expenses/1000).toLocaleString()}k/year expenses until age ${params.end_age}.${postFireNote}
+                                <br><br>
+                                Median final portfolio: ${formatCurrency(data.median_final)}<br>
+                                5th percentile: ${formatCurrency(data.percentile_5_final)}
+                            </div>
+                            <div class="action">
+                                <button class="primary-btn" onclick="showTab('scenarios')" style="background: rgba(255,255,255,0.2); padding: 10px 20px; font-size: 0.95em;">
+                                    Model Future Scenarios →
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else if (data.fire_age !== null) {
+                    const postFireNote = data.post_fire_income > 0
+                        ? `<br><strong>Post-FIRE income:</strong> €${(data.post_fire_income/1000).toLocaleString()}k/year`
+                        : '';
+                    resultDiv.innerHTML = `
+                        <div class="assessment-result not-achieved">
+                            <h2>FIRE at Age ${data.fire_age}</h2>
+                            <div class="big-number">${data.years_to_fire} years</div>
+                            <div>until you reach ${(data.target_certainty * 100).toFixed(0)}% certainty</div>
+                            <div class="details">
+                                <strong>Current status:</strong> ${(data.current_success_probability * 100).toFixed(1)}% success rate<br><br>
+                                <strong>Required portfolio:</strong> €${(data.required_portfolio/1000).toLocaleString()}k<br>
+                                <strong>Additional needed:</strong> €${(data.additional_needed/1000).toLocaleString()}k${postFireNote}<br><br>
+                                <strong>Your savings:</strong> €${(data.annual_savings/1000).toLocaleString()}k/year<br>
+                                <strong>Portfolio at FIRE:</strong> €${(data.projected_portfolio_at_fire/1000).toLocaleString()}k
+                            </div>
+                            <div class="action">
+                                <button class="primary-btn" onclick="showTab('scenarios')" style="background: rgba(255,255,255,0.2); padding: 10px 20px; font-size: 0.95em;">
+                                    Plan Detailed Scenarios →
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="assessment-result not-achieved" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">
+                            <h2>FIRE Not Reachable</h2>
+                            <div class="big-number">${(data.current_success_probability * 100).toFixed(1)}%</div>
+                            <div>Current success probability</div>
+                            <div class="details">
+                                ${data.projection_note || 'With current savings rate, FIRE is not achievable within 60 years.'}<br><br>
+                                <strong>Required portfolio:</strong> €${(data.required_portfolio/1000).toLocaleString()}k<br>
+                                <strong>Your savings:</strong> €${(data.annual_savings/1000).toLocaleString()}k/year
+                            </div>
+                            <div class="action">
+                                <button class="primary-btn" onclick="showTab('scenarios')" style="background: rgba(255,255,255,0.2); padding: 10px 20px; font-size: 0.95em;">
+                                    Explore Options →
+                                </button>
+                            </div>
+                        </div>
+                    `;
                 }
 
+                status.textContent = 'Done';
+                status.className = 'success';
+
+            } catch (error) {
+                status.textContent = 'Error: ' + error.message;
+                status.className = 'error';
+                console.error('Assessment error:', error);
+            }
+
+            button.disabled = false;
+        });
+
+        // =================================================================
+        // TAB 2: FULL SIMULATION
+        // =================================================================
+        document.getElementById('num_simulations').addEventListener('input', (e) => {
+            document.getElementById('simCount').textContent = e.target.value;
+        });
+
+        document.getElementById('runSimulation').addEventListener('click', async () => {
+            const button = document.getElementById('runSimulation');
+            const status = document.getElementById('status');
+
+            button.disabled = true;
+            status.textContent = 'Running simulation...';
+            status.className = 'running';
+
+            const startAge = parseInt(document.getElementById('t2_start_age').value);
+            const endAge = parseInt(document.getElementById('t2_end_age').value);
+
+            // Collect income phases
+            const incomePhases = formState.incomePhases
+                .filter(p => p.start_age && p.end_age && p.amount)
+                .map(p => ({
+                    name: p.name || 'Income phase',
+                    start_age: parseInt(p.start_age),
+                    end_age: parseInt(p.end_age),
+                    amount: Math.round(parseFloat(p.amount) * 1000)
+                }));
+
+            // Collect windfalls
+            const windfalls = formState.windfalls
+                .filter(w => w.age && w.amount)
+                .map(w => ({
+                    name: w.name || 'Windfall',
+                    age: parseInt(w.age),
+                    amount: Math.round(parseFloat(w.amount) * 1000)
+                }));
+
+            const mortalityEnabled = document.getElementById('t2_mortality_enabled').checked;
+
+            const params = {
+                starting_portfolio: Math.round(parseFloat(document.getElementById('t2_starting_portfolio').value) * 1000),
+                annual_expenses: Math.round(parseFloat(document.getElementById('t2_annual_expenses').value) * 1000),
+                start_age: startAge,
+                expected_return: parseFloat(document.getElementById('t2_expected_return').value) / 100,
+                inflation: parseFloat(document.getElementById('t2_inflation').value) / 100,
+                volatility: parseFloat(document.getElementById('t2_volatility').value) / 100,
+                income_phases: incomePhases,
+                windfalls: windfalls,
+                emergency_hustle: {
+                    enabled: document.getElementById('t2_hustle_enabled').checked,
+                    trigger_age_max: parseInt(document.getElementById('t2_hustle_trigger_age').value),
+                    portfolio_threshold: parseFloat(document.getElementById('t2_hustle_threshold').value) / 100,
+                    extra_income: Math.round(parseFloat(document.getElementById('t2_hustle_income').value) * 1000),
+                    duration: parseInt(document.getElementById('t2_hustle_duration').value)
+                },
+                spending_rules: {
+                    enabled: document.getElementById('t2_spending_enabled').checked,
+                    drop_threshold: parseFloat(document.getElementById('t2_drop_threshold').value) / 100,
+                    recovery_threshold: parseFloat(document.getElementById('t2_recovery_threshold').value) / 100,
+                    reduced_spending: Math.round(parseFloat(document.getElementById('t2_reduced_spending').value) * 1000),
+                    lean_spending: Math.round(parseFloat(document.getElementById('t2_lean_spending').value) * 1000),
+                    lean_age: parseInt(document.getElementById('t2_lean_age').value)
+                },
+                mortality: {
+                    enabled: mortalityEnabled,
+                    health_class: document.getElementById('t2_health_class').value,
+                    tech_scenario: document.getElementById('t2_tech_scenario').value
+                },
+                num_simulations: parseInt(document.getElementById('num_simulations').value)
+            };
+
+            // Only include end_age if mortality is NOT enabled (use dynamic calculation otherwise)
+            if (!mortalityEnabled) {
+                params.end_age = endAge;
+            }
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch('/api/simulate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(params)
+                });
+
+                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
                 const data = await response.json();
                 const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
-                // Hide initial message, show results
-                document.getElementById('initialMessage').style.display = 'none';
-                document.getElementById('results').style.display = 'block';
+                // Show results, hide stress results
+                document.getElementById('tab2-results').style.display = 'block';
+                document.getElementById('stress-results').style.display = 'none';
 
                 // Destroy existing charts
                 if (fanChart) { fanChart.destroy(); fanChart = null; }
                 if (failureChart) { failureChart.destroy(); failureChart = null; }
                 if (closeCallChart) { closeCallChart.destroy(); closeCallChart = null; }
 
-                // Reset chart containers
                 resetChartContainers();
-
-                // Render all sections
+                renderMethodHeader('monte-carlo', data.params.num_simulations);
                 renderMortality(data);
                 renderSummary(data);
                 renderParams(data);
@@ -697,22 +1972,944 @@
             button.disabled = false;
         });
 
-        // Reset chart containers that may have been replaced with text
+        // =================================================================
+        // HISTORICAL SIMULATION
+        // =================================================================
+        document.getElementById('runHistorical').addEventListener('click', async () => {
+            const button = document.getElementById('runHistorical');
+            const status = document.getElementById('status');
+
+            button.disabled = true;
+            document.getElementById('runSimulation').disabled = true;
+            status.textContent = 'Running historical backtesting...';
+            status.className = 'running';
+
+            const startAge = parseInt(document.getElementById('t2_start_age').value);
+            const endAge = parseInt(document.getElementById('t2_end_age').value);
+
+            // Collect income phases
+            const incomePhases = formState.incomePhases
+                .filter(p => p.start_age && p.end_age && p.amount)
+                .map(p => ({
+                    name: p.name || 'Income phase',
+                    start_age: parseInt(p.start_age),
+                    end_age: parseInt(p.end_age),
+                    amount: Math.round(parseFloat(p.amount) * 1000)
+                }));
+
+            // Collect windfalls
+            const windfalls = formState.windfalls
+                .filter(w => w.age && w.amount)
+                .map(w => ({
+                    name: w.name || 'Windfall',
+                    age: parseInt(w.age),
+                    amount: Math.round(parseFloat(w.amount) * 1000)
+                }));
+
+            // Note: expected_return, inflation, volatility are ignored for historical
+            // because we use actual historical returns (already inflation-adjusted)
+            const params = {
+                starting_portfolio: Math.round(parseFloat(document.getElementById('t2_starting_portfolio').value) * 1000),
+                annual_expenses: Math.round(parseFloat(document.getElementById('t2_annual_expenses').value) * 1000),
+                start_age: startAge,
+                end_age: endAge,
+                income_phases: incomePhases,
+                windfalls: windfalls,
+                emergency_hustle: {
+                    enabled: document.getElementById('t2_hustle_enabled').checked,
+                    trigger_age_max: parseInt(document.getElementById('t2_hustle_trigger_age').value),
+                    portfolio_threshold: parseFloat(document.getElementById('t2_hustle_threshold').value) / 100,
+                    extra_income: Math.round(parseFloat(document.getElementById('t2_hustle_income').value) * 1000),
+                    duration: parseInt(document.getElementById('t2_hustle_duration').value)
+                },
+                spending_rules: {
+                    enabled: document.getElementById('t2_spending_enabled').checked,
+                    drop_threshold: parseFloat(document.getElementById('t2_drop_threshold').value) / 100,
+                    recovery_threshold: parseFloat(document.getElementById('t2_recovery_threshold').value) / 100,
+                    reduced_spending: Math.round(parseFloat(document.getElementById('t2_reduced_spending').value) * 1000),
+                    lean_spending: Math.round(parseFloat(document.getElementById('t2_lean_spending').value) * 1000),
+                    lean_age: parseInt(document.getElementById('t2_lean_age').value)
+                }
+            };
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch('/api/simulate-historical', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(params)
+                });
+
+                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+                const data = await response.json();
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+
+                // Show results, hide stress results
+                document.getElementById('tab2-results').style.display = 'block';
+                document.getElementById('stress-results').style.display = 'none';
+
+                // Destroy existing charts
+                if (fanChart) { fanChart.destroy(); fanChart = null; }
+                if (failureChart) { failureChart.destroy(); failureChart = null; }
+                if (closeCallChart) { closeCallChart.destroy(); closeCallChart = null; }
+
+                resetChartContainers();
+                renderMethodHeader('historical', data.num_periods, data.data_range);
+                renderHistoricalMortality(data);  // Different - no mortality in historical
+                renderHistoricalSummary(data);
+                renderParams(data);
+                renderFanChart(data);
+                renderHistoricalFailureChart(data);
+                renderCloseCallChart(data);
+                renderHistoricalFailureList(data);
+
+                status.textContent = `Completed in ${elapsed}s - ${data.num_periods} historical periods`;
+                status.className = 'success';
+
+            } catch (error) {
+                status.textContent = 'Error: ' + error.message;
+                status.className = 'error';
+                console.error('Historical simulation error:', error);
+            }
+
+            button.disabled = false;
+            document.getElementById('runSimulation').disabled = false;
+        });
+
+        // =================================================================
+        // HISTORICAL + MORTALITY SIMULATION
+        // =================================================================
+        document.getElementById('runHistoricalMortality').addEventListener('click', async () => {
+            const button = document.getElementById('runHistoricalMortality');
+            const status = document.getElementById('status');
+
+            button.disabled = true;
+            document.getElementById('runSimulation').disabled = true;
+            document.getElementById('runHistorical').disabled = true;
+            status.textContent = 'Running historical backtest with mortality...';
+            status.className = 'running';
+
+            const startAge = parseInt(document.getElementById('t2_start_age').value);
+            const endAge = parseInt(document.getElementById('t2_end_age').value);
+
+            // Collect income phases
+            const incomePhases = formState.incomePhases
+                .filter(p => p.start_age && p.end_age && p.amount)
+                .map(p => ({
+                    name: p.name || 'Income phase',
+                    start_age: parseInt(p.start_age),
+                    end_age: parseInt(p.end_age),
+                    amount: Math.round(parseFloat(p.amount) * 1000)
+                }));
+
+            // Collect windfalls
+            const windfalls = formState.windfalls
+                .filter(w => w.age && w.amount)
+                .map(w => ({
+                    name: w.name || 'Windfall',
+                    age: parseInt(w.age),
+                    amount: Math.round(parseFloat(w.amount) * 1000)
+                }));
+
+            // Historical+mortality always uses dynamic end_age (mortality is always enabled)
+            const params = {
+                starting_portfolio: Math.round(parseFloat(document.getElementById('t2_starting_portfolio').value) * 1000),
+                annual_expenses: Math.round(parseFloat(document.getElementById('t2_annual_expenses').value) * 1000),
+                start_age: startAge,
+                // NOTE: end_age is NOT included - API will calculate dynamically based on mortality settings
+                income_phases: incomePhases,
+                windfalls: windfalls,
+                emergency_hustle: {
+                    enabled: document.getElementById('t2_hustle_enabled').checked,
+                    trigger_age_max: parseInt(document.getElementById('t2_hustle_trigger_age').value),
+                    portfolio_threshold: parseFloat(document.getElementById('t2_hustle_threshold').value) / 100,
+                    extra_income: Math.round(parseFloat(document.getElementById('t2_hustle_income').value) * 1000),
+                    duration: parseInt(document.getElementById('t2_hustle_duration').value)
+                },
+                spending_rules: {
+                    enabled: document.getElementById('t2_spending_enabled').checked,
+                    drop_threshold: parseFloat(document.getElementById('t2_drop_threshold').value) / 100,
+                    recovery_threshold: parseFloat(document.getElementById('t2_recovery_threshold').value) / 100,
+                    reduced_spending: Math.round(parseFloat(document.getElementById('t2_reduced_spending').value) * 1000),
+                    lean_spending: Math.round(parseFloat(document.getElementById('t2_lean_spending').value) * 1000),
+                    lean_age: parseInt(document.getElementById('t2_lean_age').value)
+                },
+                mortality: {
+                    enabled: true,
+                    health_class: document.getElementById('t2_health_class').value,
+                    tech_scenario: document.getElementById('t2_tech_scenario').value
+                }
+            };
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch('/api/simulate-historical-mortality', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(params)
+                });
+
+                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+                const data = await response.json();
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+
+                // Show results, hide stress results
+                document.getElementById('tab2-results').style.display = 'block';
+                document.getElementById('stress-results').style.display = 'none';
+
+                // Destroy existing charts
+                if (fanChart) { fanChart.destroy(); fanChart = null; }
+                if (failureChart) { failureChart.destroy(); failureChart = null; }
+                if (closeCallChart) { closeCallChart.destroy(); closeCallChart = null; }
+
+                resetChartContainers();
+                renderMethodHeader('historical-mortality', data.num_periods, data.data_range);
+                renderMortality(data);  // Show mortality stats!
+                renderHistoricalSummary(data);
+                renderParams(data);
+                renderFanChart(data);
+                renderHistoricalFailureChart(data);
+                renderCloseCallChart(data);
+                renderHistoricalFailureList(data);
+
+                status.textContent = `Completed in ${elapsed}s - ${data.num_periods} periods with mortality`;
+                status.className = 'success';
+
+            } catch (error) {
+                status.textContent = 'Error: ' + error.message;
+                status.className = 'error';
+                console.error('Historical+mortality simulation error:', error);
+            }
+
+            button.disabled = false;
+            document.getElementById('runSimulation').disabled = false;
+            document.getElementById('runHistorical').disabled = false;
+        });
+
+        // =================================================================
+        // STRESS TEST SCENARIOS
+        // =================================================================
+
+        document.getElementById('runStressTests').addEventListener('click', async () => {
+            const button = document.getElementById('runStressTests');
+            const status = document.getElementById('status');
+
+            // Disable all run buttons
+            button.disabled = true;
+            document.getElementById('runSimulation').disabled = true;
+            document.getElementById('runHistorical').disabled = true;
+            document.getElementById('runHistoricalMortality').disabled = true;
+
+            status.textContent = 'Running 8 stress scenarios...';
+            status.className = 'running';
+
+            const startAge = parseInt(document.getElementById('t2_start_age').value);
+            const mortalityEnabled = document.getElementById('t2_mortality_enabled').checked;
+
+            // Collect income phases
+            const incomePhases = formState.incomePhases
+                .filter(p => p.start_age && p.end_age && p.amount)
+                .map(p => ({
+                    name: p.name || 'Income phase',
+                    start_age: parseInt(p.start_age),
+                    end_age: parseInt(p.end_age),
+                    amount: Math.round(parseFloat(p.amount) * 1000)
+                }));
+
+            // Collect windfalls
+            const windfalls = formState.windfalls
+                .filter(w => w.age && w.amount)
+                .map(w => ({
+                    name: w.name || 'Windfall',
+                    age: parseInt(w.age),
+                    amount: Math.round(parseFloat(w.amount) * 1000)
+                }));
+
+            const params = {
+                starting_portfolio: Math.round(parseFloat(document.getElementById('t2_starting_portfolio').value) * 1000),
+                annual_expenses: Math.round(parseFloat(document.getElementById('t2_annual_expenses').value) * 1000),
+                start_age: startAge,
+                expected_return: parseFloat(document.getElementById('t2_expected_return').value) / 100,
+                inflation: parseFloat(document.getElementById('t2_inflation').value) / 100,
+                volatility: parseFloat(document.getElementById('t2_volatility').value) / 100,
+                income_phases: incomePhases,
+                windfalls: windfalls,
+                emergency_hustle: {
+                    enabled: document.getElementById('t2_hustle_enabled').checked,
+                    trigger_age_max: parseInt(document.getElementById('t2_hustle_trigger_age').value),
+                    portfolio_threshold: parseFloat(document.getElementById('t2_hustle_threshold').value) / 100,
+                    extra_income: Math.round(parseFloat(document.getElementById('t2_hustle_income').value) * 1000),
+                    duration: parseInt(document.getElementById('t2_hustle_duration').value)
+                },
+                spending_rules: {
+                    enabled: document.getElementById('t2_spending_enabled').checked,
+                    drop_threshold: parseFloat(document.getElementById('t2_drop_threshold').value) / 100,
+                    recovery_threshold: parseFloat(document.getElementById('t2_recovery_threshold').value) / 100,
+                    reduced_spending: Math.round(parseFloat(document.getElementById('t2_reduced_spending').value) * 1000),
+                    lean_spending: Math.round(parseFloat(document.getElementById('t2_lean_spending').value) * 1000),
+                    lean_age: parseInt(document.getElementById('t2_lean_age').value)
+                },
+                mortality: {
+                    enabled: mortalityEnabled,
+                    health_class: document.getElementById('t2_health_class').value,
+                    tech_scenario: document.getElementById('t2_tech_scenario').value
+                },
+                num_simulations_per_scenario: 500
+            };
+
+            // Add end_age if mortality is disabled
+            if (!mortalityEnabled) {
+                params.end_age = parseInt(document.getElementById('t2_end_age').value);
+            }
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch('/api/stress-scenarios', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(params)
+                });
+
+                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+                const data = await response.json();
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+
+                // Hide regular Tab 2 results, show stress results
+                document.getElementById('tab2-results').style.display = 'none';
+                document.getElementById('stress-results').style.display = 'block';
+
+                // Destroy any existing stress charts
+                Object.values(stressCharts).forEach(chart => chart.destroy());
+                stressCharts = {};
+
+                // Render all scenario cards
+                renderStressScenarios(data);
+
+                const numScenarios = Object.keys(data.scenarios).length;
+                status.textContent = `Completed ${numScenarios} scenarios in ${elapsed}s`;
+                status.className = 'success';
+
+            } catch (error) {
+                status.textContent = 'Error: ' + error.message;
+                status.className = 'error';
+                console.error('Stress test error:', error);
+            }
+
+            // Re-enable buttons
+            button.disabled = false;
+            document.getElementById('runSimulation').disabled = false;
+            document.getElementById('runHistorical').disabled = false;
+            document.getElementById('runHistoricalMortality').disabled = false;
+        });
+
+        function renderStressScenarios(data) {
+            const container = document.getElementById('stress-scenarios-container');
+            container.innerHTML = '';
+
+            // Sort scenarios by success rate (worst first)
+            const scenarios = Object.entries(data.scenarios);
+            scenarios.sort((a, b) => {
+                return a[1].results.summary.success_rate - b[1].results.summary.success_rate;
+            });
+
+            scenarios.forEach(([id, scenario]) => {
+                const card = createStressScenarioCard(id, scenario);
+                container.appendChild(card);
+            });
+        }
+
+        function createStressScenarioCard(id, scenario) {
+            const meta = scenario.metadata;
+            const results = scenario.results;
+            const successRate = results.summary.success_rate;
+
+            const card = document.createElement('div');
+            card.className = 'stress-scenario-card';
+            card.id = `stress-card-${id}`;
+
+            // Determine success badge class
+            let badgeClass = 'danger';
+            if (successRate >= 0.95) badgeClass = 'excellent';
+            else if (successRate >= 0.85) badgeClass = 'good';
+            else if (successRate >= 0.70) badgeClass = 'warning';
+
+            // Severity badge
+            const severityClass = meta.severity || 'moderate';
+
+            card.innerHTML = `
+                <div class="stress-scenario-header">
+                    <span>
+                        <span class="stress-scenario-name">${meta.name}</span>
+                        <span class="stress-severity ${severityClass}">${severityClass}</span>
+                    </span>
+                    <span class="stress-success-badge ${badgeClass}">
+                        ${(successRate * 100).toFixed(0)}%
+                    </span>
+                </div>
+                <div class="stress-scenario-body">
+                    <div class="stress-description">${meta.description}</div>
+                    <div class="stress-likelihood">
+                        <strong>Likelihood:</strong> ${meta.likelihood}
+                    </div>
+                    <div class="stress-commentary">${meta.commentary}</div>
+                    <div class="stress-stats-row">
+                        <div class="stress-stat">
+                            <div class="stress-stat-value">${results.summary.failure_count}</div>
+                            <div class="stress-stat-label">Failures</div>
+                        </div>
+                        <div class="stress-stat">
+                            <div class="stress-stat-value">${formatCurrency(results.summary.median_final)}</div>
+                            <div class="stress-stat-label">Median Final</div>
+                        </div>
+                        <div class="stress-stat">
+                            <div class="stress-stat-value">${results.summary.avg_ruin_age ? Math.round(results.summary.avg_ruin_age) : 'N/A'}</div>
+                            <div class="stress-stat-label">Avg Ruin Age</div>
+                        </div>
+                        <div class="stress-stat">
+                            <div class="stress-stat-value">${(results.summary.hustle_activation_rate * 100).toFixed(0)}%</div>
+                            <div class="stress-stat-label">Hustle Used</div>
+                        </div>
+                    </div>
+                    <div class="stress-chart-container">
+                        <canvas id="stress-chart-${id}"></canvas>
+                    </div>
+                </div>
+            `;
+
+            // Schedule chart rendering after DOM insertion
+            setTimeout(() => renderStressChart(id, results), 10);
+
+            return card;
+        }
+
+        function renderStressChart(scenarioId, results) {
+            const canvas = document.getElementById(`stress-chart-${scenarioId}`);
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            const perc = results.percentiles;
+
+            stressCharts[scenarioId] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: perc.ages,
+                    datasets: [
+                        {
+                            label: '5th-95th',
+                            data: perc.p95,
+                            fill: '+1',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            borderColor: 'rgba(231, 76, 60, 0.2)',
+                            borderWidth: 1,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '',
+                            data: perc.p5,
+                            fill: false,
+                            borderColor: 'rgba(231, 76, 60, 0.2)',
+                            borderWidth: 1,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '25th-75th',
+                            data: perc.p75,
+                            fill: '+1',
+                            backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                            borderColor: 'transparent',
+                            borderWidth: 0,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '',
+                            data: perc.p25,
+                            fill: false,
+                            borderColor: 'transparent',
+                            borderWidth: 0,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Median',
+                            data: perc.p50,
+                            fill: false,
+                            borderColor: 'rgba(192, 57, 43, 1)',
+                            borderWidth: 2,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '10th percentile',
+                            data: perc.p10,
+                            fill: false,
+                            borderColor: 'rgba(192, 57, 43, 0.5)',
+                            borderWidth: 1,
+                            borderDash: [4, 4],
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    if (context.dataset.label && context.dataset.label !== '') {
+                                        return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                                    }
+                                    return formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Age' }
+                        },
+                        y: {
+                            title: { display: false },
+                            ticks: { callback: (v) => formatCurrency(v) },
+                            min: 0
+                        }
+                    }
+                }
+            });
+        }
+
+        // =================================================================
+        // LEGACY/CHARITY TRADE-OFF
+        // =================================================================
+        let tradeoffChart = null;
+
+        document.getElementById('runTradeoff').addEventListener('click', async () => {
+            const button = document.getElementById('runTradeoff');
+            const status = document.getElementById('tradeoffStatus');
+
+            button.disabled = true;
+            status.textContent = 'Calculating trade-off curve (this takes ~30s)...';
+            status.className = 'running';
+
+            const params = {
+                annual_expenses: Math.round(parseFloat(document.getElementById('t2_annual_expenses').value) * 1000),
+                start_age: parseInt(document.getElementById('t2_start_age').value),
+                end_age: parseInt(document.getElementById('t2_end_age').value),
+                expected_return: parseFloat(document.getElementById('t2_expected_return').value) / 100,
+                inflation: parseFloat(document.getElementById('t2_inflation').value) / 100,
+                volatility: parseFloat(document.getElementById('t2_volatility').value) / 100,
+                income_phases: formState.incomePhases
+                    .filter(p => p.start_age && p.end_age && p.amount)
+                    .map(p => ({
+                        name: p.name || 'Income phase',
+                        start_age: parseInt(p.start_age),
+                        end_age: parseInt(p.end_age),
+                        amount: Math.round(parseFloat(p.amount) * 1000)
+                    })),
+                windfalls: formState.windfalls
+                    .filter(w => w.age && w.amount)
+                    .map(w => ({
+                        name: w.name || 'Windfall',
+                        age: parseInt(w.age),
+                        amount: Math.round(parseFloat(w.amount) * 1000)
+                    })),
+                emergency_hustle: {
+                    enabled: document.getElementById('t2_hustle_enabled').checked,
+                    trigger_age_max: parseInt(document.getElementById('t2_hustle_trigger_age').value),
+                    portfolio_threshold: parseFloat(document.getElementById('t2_hustle_threshold').value) / 100,
+                    extra_income: Math.round(parseFloat(document.getElementById('t2_hustle_income').value) * 1000),
+                    duration: parseInt(document.getElementById('t2_hustle_duration').value)
+                },
+                spending_rules: {
+                    enabled: document.getElementById('t2_spending_enabled').checked,
+                    drop_threshold: parseFloat(document.getElementById('t2_drop_threshold').value) / 100,
+                    recovery_threshold: parseFloat(document.getElementById('t2_recovery_threshold').value) / 100,
+                    reduced_spending: Math.round(parseFloat(document.getElementById('t2_reduced_spending').value) * 1000),
+                    lean_spending: Math.round(parseFloat(document.getElementById('t2_lean_spending').value) * 1000),
+                    lean_age: parseInt(document.getElementById('t2_lean_age').value)
+                },
+                mortality: {
+                    enabled: document.getElementById('t2_mortality_enabled').checked,
+                    health_class: document.getElementById('t2_health_class').value,
+                    tech_scenario: document.getElementById('t2_tech_scenario').value
+                },
+                num_simulations: 500
+            };
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch('/api/legacy-tradeoff', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(params)
+                });
+
+                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+                const data = await response.json();
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+
+                document.getElementById('tradeoff-results').style.display = 'block';
+                renderTradeoffChart(data);
+                renderTradeoffSummary(data);
+                renderTradeoffTable(data);
+
+                status.textContent = `Completed in ${elapsed}s`;
+                status.className = 'success';
+
+            } catch (error) {
+                status.textContent = 'Error: ' + error.message;
+                status.className = 'error';
+                console.error('Trade-off calculation error:', error);
+            }
+
+            button.disabled = false;
+        });
+
+        function renderTradeoffChart(data) {
+            const ctx = document.getElementById('tradeoffChart').getContext('2d');
+
+            if (tradeoffChart) {
+                tradeoffChart.destroy();
+            }
+
+            const curve = data.curve;
+
+            tradeoffChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: curve.map(p => `${p.portfolio_multiple}x`),
+                    datasets: [
+                        {
+                            label: 'Success Rate',
+                            data: curve.map(p => p.success_rate * 100),
+                            borderColor: '#27ae60',
+                            backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                            fill: true,
+                            yAxisID: 'y',
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Expected Legacy (€k)',
+                            data: curve.map(p => p.expected_legacy / 1000),
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            fill: true,
+                            yAxisID: 'y1',
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Security vs. Giving Capacity Trade-off'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: (items) => {
+                                    const idx = items[0].dataIndex;
+                                    return `Portfolio: €${(curve[idx].portfolio / 1000).toFixed(0)}k (${curve[idx].portfolio_multiple}x expenses)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Portfolio (multiple of annual expenses)' }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Success Rate (%)' },
+                            min: 0,
+                            max: 100
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'Expected Legacy (€k)' },
+                            grid: { drawOnChartArea: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderTradeoffSummary(data) {
+            const container = document.getElementById('tradeoffSummary');
+            const safePortfolio = data.safe_portfolio_95;
+
+            container.innerHTML = `
+                <div class="summary-card">
+                    <div class="summary-value">${formatCurrency(safePortfolio)}</div>
+                    <div class="summary-label">95% Safe Portfolio</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value">${(safePortfolio / data.annual_expenses).toFixed(1)}x</div>
+                    <div class="summary-label">Multiple of Expenses</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value">${data.years} years</div>
+                    <div class="summary-label">Retirement Length</div>
+                </div>
+            `;
+        }
+
+        function renderTradeoffTable(data) {
+            const container = document.getElementById('tradeoffTable');
+            const curve = data.curve;
+
+            let html = `
+                <h3 style="margin-top: 20px;">Trade-off Data</h3>
+                <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">
+                    Each row shows: if you start with X portfolio, you get Y% success rate,
+                    and expect to leave Z as legacy/for charity.
+                </p>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                    <thead>
+                        <tr style="background: #f5f5f5; text-align: left;">
+                            <th style="padding: 8px; border-bottom: 2px solid #ddd;">Portfolio</th>
+                            <th style="padding: 8px; border-bottom: 2px solid #ddd;">Multiple</th>
+                            <th style="padding: 8px; border-bottom: 2px solid #ddd;">Success Rate</th>
+                            <th style="padding: 8px; border-bottom: 2px solid #ddd;">Expected Legacy</th>
+                            <th style="padding: 8px; border-bottom: 2px solid #ddd;">5th Percentile</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            for (const p of curve) {
+                const isHighlight = p.success_rate >= 0.95 && p.success_rate < 0.97;
+                const rowStyle = isHighlight ? 'background: #e8f8f0;' : '';
+                html += `
+                    <tr style="${rowStyle}">
+                        <td style="padding: 8px; border-bottom: 1px solid #eee;">${formatCurrency(p.portfolio)}</td>
+                        <td style="padding: 8px; border-bottom: 1px solid #eee;">${p.portfolio_multiple}x</td>
+                        <td style="padding: 8px; border-bottom: 1px solid #eee;">${(p.success_rate * 100).toFixed(1)}%</td>
+                        <td style="padding: 8px; border-bottom: 1px solid #eee;">${formatCurrency(p.expected_legacy)}</td>
+                        <td style="padding: 8px; border-bottom: 1px solid #eee;">${formatCurrency(p.percentile_5_final)}</td>
+                    </tr>
+                `;
+            }
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // =================================================================
+        // RENDERING FUNCTIONS
+        // =================================================================
+        function renderMethodHeader(method, count, dataRange) {
+            const container = document.getElementById('methodHeader');
+            const title = document.getElementById('resultsTitle');
+
+            if (method === 'monte-carlo') {
+                container.innerHTML = `
+                    <span class="method-badge monte-carlo">Monte Carlo</span>
+                    <span style="color: #666;">${count.toLocaleString()} random simulations</span>
+                `;
+                title.textContent = 'Portfolio Success (Ignoring Mortality)';
+            } else if (method === 'historical-mortality') {
+                container.innerHTML = `
+                    <span class="method-badge historical" style="background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);">Historical + Mortality</span>
+                    <span style="color: #666;">${count} periods from ${dataRange}</span>
+                `;
+                title.textContent = 'Historical Success Rate (With Mortality)';
+            } else {
+                container.innerHTML = `
+                    <span class="method-badge historical">Historical Backtest</span>
+                    <span style="color: #666;">${count} periods from ${dataRange}</span>
+                `;
+                title.textContent = 'Historical Success Rate';
+            }
+        }
+
+        function renderHistoricalMortality(data) {
+            // Historical simulation doesn't use mortality modeling
+            const container = document.getElementById('mortalitySection');
+            container.innerHTML = `
+                <div class="mortality-note" style="margin-top: 0;">
+                    <strong>Note:</strong> Historical returns are already inflation-adjusted (real returns).
+                    Income phases and expenses are treated as today's dollars.
+                </div>
+            `;
+        }
+
+        function renderHistoricalSummary(data) {
+            const s = data.summary;
+            const successClass = s.success_rate >= 0.95 ? 'success' : s.success_rate >= 0.90 ? 'warning' : 'danger';
+
+            document.getElementById('summary').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value ${successClass}">${(s.success_rate * 100).toFixed(1)}%</div>
+                    <div class="stat-label">Historical Success Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${s.survived_count} / ${data.num_periods}</div>
+                    <div class="stat-label">Periods Survived</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${s.failure_count}</div>
+                    <div class="stat-label">Failed Periods</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${formatCurrency(s.median_final)}</div>
+                    <div class="stat-label">Median Final Portfolio</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${s.avg_ruin_age ? Math.round(s.avg_ruin_age) : 'N/A'}</div>
+                    <div class="stat-label">Avg Ruin Age (failures)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${(s.hustle_activation_rate * 100).toFixed(1)}%</div>
+                    <div class="stat-label">Hustle Triggered</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${(s.spending_reduction_rate * 100).toFixed(1)}%</div>
+                    <div class="stat-label">Spending Reduced</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${formatCurrency(s.percentile_5_final)}</div>
+                    <div class="stat-label">5th Percentile Final</div>
+                </div>
+            `;
+        }
+
+        function renderHistoricalFailureChart(data) {
+            const canvas = document.getElementById('failureChart');
+            const failures = data.failures.slice(0, 15);
+
+            if (failures.length === 0) {
+                canvas.style.display = 'none';
+                let msg = canvas.parentElement.querySelector('.no-data-msg');
+                if (!msg) {
+                    msg = document.createElement('p');
+                    msg.className = 'no-data-msg';
+                    msg.style.cssText = 'text-align: center; color: #27ae60; padding: 40px;';
+                    canvas.parentElement.insertBefore(msg, canvas);
+                }
+                msg.textContent = 'No failures! Survived all historical periods.';
+                msg.style.display = 'block';
+                return;
+            }
+
+            // Show canvas, hide message
+            canvas.style.display = 'block';
+            const msg = canvas.parentElement.querySelector('.no-data-msg');
+            if (msg) msg.style.display = 'none';
+
+            const ctx = canvas.getContext('2d');
+
+            const colors = ['rgba(142, 68, 173, 0.7)', 'rgba(155, 89, 182, 0.7)', 'rgba(231, 76, 60, 0.7)', 'rgba(192, 57, 43, 0.7)', 'rgba(211, 84, 0, 0.7)'];
+            const datasets = failures.map((f, i) => ({
+                label: `${f.start_year} → ruin at ${f.ruin_age}`,
+                data: f.trajectory,
+                fill: false,
+                borderColor: colors[i % colors.length],
+                borderWidth: 2,
+                pointRadius: 0
+            }));
+
+            failureChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: failures[0]?.ages || [], datasets: datasets },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        x: { title: { display: true, text: 'Age' } },
+                        y: { title: { display: true, text: 'Portfolio Value' }, ticks: { callback: (value) => formatCurrency(value) }, min: 0 }
+                    }
+                }
+            });
+        }
+
+        function renderHistoricalFailureList(data) {
+            const container = document.getElementById('failureList');
+            const failures = data.failures;
+            const closeCalls = data.close_calls;
+
+            // Famous crisis years for highlighting
+            const famousYears = [1929, 1930, 1931, 1937, 1965, 1966, 1968, 1973, 2000, 2007, 2008];
+
+            let html = '<h3>Failed Starting Years</h3>';
+            if (failures.length === 0) {
+                html += '<p style="color: #27ae60;">No failures - your plan survived all historical periods!</p>';
+            } else {
+                html += '<p>If you had retired in these years with this plan, you would have run out of money:</p>';
+                html += '<div class="failure-years-list">';
+                failures.forEach(f => {
+                    const isFamous = famousYears.includes(f.start_year);
+                    html += `<span class="failure-year-tag ${isFamous ? 'famous' : ''}">${f.start_year} (ruin at ${f.ruin_age})</span>`;
+                });
+                html += '</div>';
+            }
+
+            html += '<h3 style="margin-top: 20px;">Close Calls (Survived but Got Scary)</h3>';
+            if (closeCalls.length === 0) {
+                html += '<p>No close calls - all survivors maintained healthy portfolios.</p>';
+            } else {
+                closeCalls.slice(0, 5).forEach(cc => {
+                    const hustleNote = cc.hustle_activated ? ' (hustle helped!)' : '';
+                    const spendingNote = cc.spending_went_lean ? ' (went lean)' : (cc.spending_reduced ? ' (reduced spending)' : '');
+                    html += `<div class="close-call-item">Dropped to <strong>${formatCurrency(cc.min_value)}</strong> at age ${cc.min_age}, recovered to ${formatCurrency(cc.final_portfolio)}${hustleNote}${spendingNote}</div>`;
+                });
+            }
+
+            container.innerHTML = html;
+        }
+
         function resetChartContainers() {
-            const chartIds = ['fanChart', 'failureChart', 'closeCallChart'];
-            chartIds.forEach(id => {
-                const container = document.getElementById(id)?.parentElement;
-                if (container && !document.getElementById(id)) {
-                    const canvas = document.createElement('canvas');
+            // Chart containers are inside .chart-container divs
+            const chartConfigs = [
+                { id: 'fanChart', containerIndex: 0 },
+                { id: 'failureChart', containerIndex: 1 },
+                { id: 'closeCallChart', containerIndex: 2 }
+            ];
+
+            const containers = document.querySelectorAll('#tab2-results .chart-container');
+
+            chartConfigs.forEach(({ id, containerIndex }) => {
+                const container = containers[containerIndex];
+                if (!container) return;
+
+                // Hide any "no data" messages from previous runs
+                const noDataMsg = container.querySelector('.no-data-msg');
+                if (noDataMsg) noDataMsg.style.display = 'none';
+
+                // Check if canvas exists
+                let canvas = document.getElementById(id);
+                if (!canvas) {
+                    // Canvas is missing - recreate it
+                    canvas = document.createElement('canvas');
                     canvas.id = id;
+
+                    // Find legend note if it exists
                     const legend = container.querySelector('.legend-note');
+
+                    // Clear any replacement content (like "No failures!" message)
+                    const nonLegendContent = Array.from(container.children).filter(
+                        el => !el.classList.contains('legend-note') && !el.classList.contains('no-data-msg')
+                    );
+                    nonLegendContent.forEach(el => el.remove());
+
+                    // Insert canvas before legend or at start
                     if (legend) {
                         container.insertBefore(canvas, legend);
                     } else {
-                        container.innerHTML = '';
-                        container.appendChild(canvas);
+                        container.prepend(canvas);
                     }
                 }
+
+                // Ensure canvas is visible
+                canvas.style.display = 'block';
             });
         }
 
@@ -723,9 +2920,7 @@
             if (!s.mortality_enabled) {
                 container.innerHTML = `
                     <h3>Mortality Modeling</h3>
-                    <div class="mortality-disabled">
-                        Mortality modeling is disabled in server config.
-                    </div>
+                    <div class="mortality-disabled">Mortality modeling is disabled.</div>
                 `;
                 return;
             }
@@ -766,7 +2961,8 @@
                     </div>
                 </div>
                 <div class="mortality-note">
-                    <strong>How to read this:</strong> Using Finnish male mortality tables (${s.healthy_lifestyle_factor < 1 ? 'adjusted for healthy lifestyle factor ' + s.healthy_lifestyle_factor : 'population average'}),
+                    <strong>How to read this:</strong> Using Finnish male mortality tables
+                    (health: ${s.health_class || 'average'}, tech advances: ${s.tech_scenario || 'moderate'}),
                     we sample a random death age for each simulation. The "real failure rate" only counts
                     simulations where you ran out of money while still alive.
                 </div>
@@ -815,13 +3011,13 @@
 
         function renderParams(data) {
             const p = data.params;
-            const phases = p.income_phases.map(ph =>
-                `Age ${ph.start_age}-${ph.end_age}: €${ph.amount.toLocaleString()} (${ph.name})`
-            ).join('<br>');
+            const phases = p.income_phases.length > 0
+                ? p.income_phases.map(ph => `Age ${ph.start_age}-${ph.end_age}: €${ph.amount.toLocaleString()} (${ph.name})`).join('<br>')
+                : 'None';
 
-            const windfalls = p.windfalls.map(w =>
-                `Age ${w.age}: €${w.amount.toLocaleString()} (${w.name})`
-            ).join('<br>');
+            const windfalls = p.windfalls.length > 0
+                ? p.windfalls.map(w => `Age ${w.age}: €${w.amount.toLocaleString()} (${w.name})`).join('<br>')
+                : 'None';
 
             const spendingRules = p.spending_rules && p.spending_rules.enabled ?
                 `Drop to €${p.spending_rules.reduced_spending?.toLocaleString() || '25,000'} at ${(p.spending_rules.drop_threshold * 100)}% portfolio<br>` +
@@ -830,33 +3026,15 @@
                 'Disabled';
 
             document.getElementById('params').innerHTML = `
-                <div class="param-item">
-                    <span class="param-label">Starting Portfolio:</span> ${formatCurrency(p.starting_portfolio)}
-                </div>
-                <div class="param-item">
-                    <span class="param-label">Annual Expenses:</span> ${formatCurrency(p.annual_expenses)}
-                </div>
-                <div class="param-item">
-                    <span class="param-label">Time Horizon:</span> Age ${p.start_age} to ${p.end_age}
-                </div>
-                <div class="param-item">
-                    <span class="param-label">Expected Return:</span> ${(p.expected_return * 100).toFixed(0)}%
-                </div>
-                <div class="param-item">
-                    <span class="param-label">Inflation:</span> ${(p.inflation * 100).toFixed(0)}%
-                </div>
-                <div class="param-item">
-                    <span class="param-label">Volatility:</span> ${(p.volatility * 100).toFixed(0)}%
-                </div>
-                <div class="param-item">
-                    <span class="param-label">Income Phases:</span><br>${phases}
-                </div>
-                <div class="param-item">
-                    <span class="param-label">Windfalls:</span><br>${windfalls}
-                </div>
-                <div class="param-item">
-                    <span class="param-label">Spending Rules:</span><br>${spendingRules}
-                </div>
+                <div class="param-item"><span class="param-label">Starting Portfolio:</span> ${formatCurrency(p.starting_portfolio)}</div>
+                <div class="param-item"><span class="param-label">Annual Expenses:</span> ${formatCurrency(p.annual_expenses)}</div>
+                <div class="param-item"><span class="param-label">Time Horizon:</span> Age ${p.start_age} to ${p.end_age}</div>
+                <div class="param-item"><span class="param-label">Expected Return:</span> ${(p.expected_return * 100).toFixed(0)}%</div>
+                <div class="param-item"><span class="param-label">Inflation:</span> ${(p.inflation * 100).toFixed(0)}%</div>
+                <div class="param-item"><span class="param-label">Volatility:</span> ${(p.volatility * 100).toFixed(0)}%</div>
+                <div class="param-item"><span class="param-label">Income Phases:</span><br>${phases}</div>
+                <div class="param-item"><span class="param-label">Windfalls:</span><br>${windfalls}</div>
+                <div class="param-item"><span class="param-label">Spending Rules:</span><br>${spendingRules}</div>
             `;
         }
 
@@ -869,126 +3047,57 @@
                 data: {
                     labels: perc.ages,
                     datasets: [
-                        {
-                            label: '5th-95th percentile',
-                            data: perc.p95,
-                            fill: '+5',
-                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                            borderColor: 'rgba(52, 152, 219, 0.3)',
-                            borderWidth: 1,
-                            pointRadius: 0
-                        },
-                        {
-                            label: '',
-                            data: perc.p5,
-                            fill: false,
-                            borderColor: 'rgba(52, 152, 219, 0.3)',
-                            borderWidth: 1,
-                            pointRadius: 0
-                        },
-                        {
-                            label: '15th-75th percentile',
-                            data: perc.p75,
-                            fill: '+1',
-                            backgroundColor: 'rgba(52, 152, 219, 0.2)',
-                            borderColor: 'rgba(52, 152, 219, 0.4)',
-                            borderWidth: 1,
-                            pointRadius: 0
-                        },
-                        {
-                            label: '',
-                            data: perc.p15,
-                            fill: false,
-                            borderColor: 'rgba(52, 152, 219, 0.4)',
-                            borderWidth: 1,
-                            pointRadius: 0
-                        },
-                        {
-                            label: '25th-75th percentile',
-                            data: perc.p75,
-                            fill: '+1',
-                            backgroundColor: 'rgba(52, 152, 219, 0.3)',
-                            borderColor: 'transparent',
-                            borderWidth: 0,
-                            pointRadius: 0
-                        },
-                        {
-                            label: '',
-                            data: perc.p25,
-                            fill: false,
-                            borderColor: 'transparent',
-                            borderWidth: 0,
-                            pointRadius: 0
-                        },
-                        {
-                            label: 'Median (50th)',
-                            data: perc.p50,
-                            fill: false,
-                            borderColor: 'rgba(41, 128, 185, 1)',
-                            borderWidth: 3,
-                            pointRadius: 0
-                        },
-                        {
-                            label: '10th percentile',
-                            data: perc.p10,
-                            fill: false,
-                            borderColor: 'rgba(231, 76, 60, 0.7)',
-                            borderWidth: 2,
-                            borderDash: [5, 5],
-                            pointRadius: 0
-                        }
+                        { label: '5th-95th percentile', data: perc.p95, fill: '+5', backgroundColor: 'rgba(52, 152, 219, 0.1)', borderColor: 'rgba(52, 152, 219, 0.3)', borderWidth: 1, pointRadius: 0 },
+                        { label: '', data: perc.p5, fill: false, borderColor: 'rgba(52, 152, 219, 0.3)', borderWidth: 1, pointRadius: 0 },
+                        { label: '15th-75th percentile', data: perc.p75, fill: '+1', backgroundColor: 'rgba(52, 152, 219, 0.2)', borderColor: 'rgba(52, 152, 219, 0.4)', borderWidth: 1, pointRadius: 0 },
+                        { label: '', data: perc.p15, fill: false, borderColor: 'rgba(52, 152, 219, 0.4)', borderWidth: 1, pointRadius: 0 },
+                        { label: '25th-75th percentile', data: perc.p75, fill: '+1', backgroundColor: 'rgba(52, 152, 219, 0.3)', borderColor: 'transparent', borderWidth: 0, pointRadius: 0 },
+                        { label: '', data: perc.p25, fill: false, borderColor: 'transparent', borderWidth: 0, pointRadius: 0 },
+                        { label: 'Median (50th)', data: perc.p50, fill: false, borderColor: 'rgba(41, 128, 185, 1)', borderWidth: 3, pointRadius: 0 },
+                        { label: '10th percentile', data: perc.p10, fill: false, borderColor: 'rgba(231, 76, 60, 0.7)', borderWidth: 2, borderDash: [5, 5], pointRadius: 0 }
                     ]
                 },
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: {
-                            display: true,
-                            labels: {
-                                filter: (item) => item.text !== ''
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: (context) => {
-                                    return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
-                                }
-                            }
-                        }
+                        legend: { display: true, labels: { filter: (item) => item.text !== '' } },
+                        tooltip: { callbacks: { label: (context) => context.dataset.label + ': ' + formatCurrency(context.parsed.y) } }
                     },
                     scales: {
-                        x: {
-                            title: { display: true, text: 'Age' }
-                        },
-                        y: {
-                            title: { display: true, text: 'Portfolio Value' },
-                            ticks: {
-                                callback: (value) => formatCurrency(value)
-                            }
-                        }
+                        x: { title: { display: true, text: 'Age' } },
+                        y: { title: { display: true, text: 'Portfolio Value' }, ticks: { callback: (value) => formatCurrency(value) } }
                     }
                 }
             });
         }
 
         function renderFailureChart(data) {
-            const ctx = document.getElementById('failureChart').getContext('2d');
+            const canvas = document.getElementById('failureChart');
             const failures = data.failures.slice(0, 15);
 
             if (failures.length === 0) {
-                ctx.canvas.parentElement.querySelector('canvas').outerHTML =
-                    '<p style="text-align: center; color: #27ae60; padding: 40px;">No failures! All simulations succeeded.</p>';
+                canvas.style.display = 'none';
+                // Add or update message
+                let msg = canvas.parentElement.querySelector('.no-data-msg');
+                if (!msg) {
+                    msg = document.createElement('p');
+                    msg.className = 'no-data-msg';
+                    msg.style.cssText = 'text-align: center; color: #27ae60; padding: 40px;';
+                    canvas.parentElement.insertBefore(msg, canvas);
+                }
+                msg.textContent = 'No failures! All simulations succeeded.';
+                msg.style.display = 'block';
                 return;
             }
 
-            const colors = [
-                'rgba(231, 76, 60, 0.7)',
-                'rgba(192, 57, 43, 0.7)',
-                'rgba(155, 89, 182, 0.7)',
-                'rgba(142, 68, 173, 0.7)',
-                'rgba(211, 84, 0, 0.7)'
-            ];
+            // Show canvas, hide message
+            canvas.style.display = 'block';
+            const msg = canvas.parentElement.querySelector('.no-data-msg');
+            if (msg) msg.style.display = 'none';
 
+            const ctx = canvas.getContext('2d');
+
+            const colors = ['rgba(231, 76, 60, 0.7)', 'rgba(192, 57, 43, 0.7)', 'rgba(155, 89, 182, 0.7)', 'rgba(142, 68, 173, 0.7)', 'rgba(211, 84, 0, 0.7)'];
             const datasets = failures.map((f, i) => ({
                 label: `Failed at ${f.ruin_age}`,
                 data: f.trajectory,
@@ -1000,40 +3109,43 @@
 
             failureChart = new Chart(ctx, {
                 type: 'line',
-                data: {
-                    labels: failures[0]?.ages || [],
-                    datasets: datasets
-                },
+                data: { labels: failures[0]?.ages || [], datasets: datasets },
                 options: {
                     responsive: true,
-                    plugins: {
-                        legend: { display: true }
-                    },
+                    plugins: { legend: { display: true } },
                     scales: {
-                        x: {
-                            title: { display: true, text: 'Age' }
-                        },
-                        y: {
-                            title: { display: true, text: 'Portfolio Value' },
-                            ticks: {
-                                callback: (value) => formatCurrency(value)
-                            },
-                            min: 0
-                        }
+                        x: { title: { display: true, text: 'Age' } },
+                        y: { title: { display: true, text: 'Portfolio Value' }, ticks: { callback: (value) => formatCurrency(value) }, min: 0 }
                     }
                 }
             });
         }
 
         function renderCloseCallChart(data) {
-            const ctx = document.getElementById('closeCallChart').getContext('2d');
+            const canvas = document.getElementById('closeCallChart');
             const closeCalls = data.close_calls.slice(0, 10);
 
             if (closeCalls.length === 0) {
-                ctx.canvas.parentElement.querySelector('canvas').outerHTML =
-                    '<p style="text-align: center; color: #888; padding: 40px;">No close calls - all survivors maintained healthy portfolios.</p>';
+                canvas.style.display = 'none';
+                // Add or update message
+                let msg = canvas.parentElement.querySelector('.no-data-msg');
+                if (!msg) {
+                    msg = document.createElement('p');
+                    msg.className = 'no-data-msg';
+                    msg.style.cssText = 'text-align: center; color: #888; padding: 40px;';
+                    canvas.parentElement.insertBefore(msg, canvas);
+                }
+                msg.textContent = 'No close calls - all survivors maintained healthy portfolios.';
+                msg.style.display = 'block';
                 return;
             }
+
+            // Show canvas, hide message
+            canvas.style.display = 'block';
+            const msg = canvas.parentElement.querySelector('.no-data-msg');
+            if (msg) msg.style.display = 'none';
+
+            const ctx = canvas.getContext('2d');
 
             const datasets = closeCalls.map((cc, i) => ({
                 label: `Min €${Math.round(cc.min_value/1000)}k at age ${cc.min_age}`,
@@ -1046,25 +3158,13 @@
 
             closeCallChart = new Chart(ctx, {
                 type: 'line',
-                data: {
-                    labels: closeCalls[0]?.ages || [],
-                    datasets: datasets
-                },
+                data: { labels: closeCalls[0]?.ages || [], datasets: datasets },
                 options: {
                     responsive: true,
-                    plugins: {
-                        legend: { display: true }
-                    },
+                    plugins: { legend: { display: true } },
                     scales: {
-                        x: {
-                            title: { display: true, text: 'Age' }
-                        },
-                        y: {
-                            title: { display: true, text: 'Portfolio Value' },
-                            ticks: {
-                                callback: (value) => formatCurrency(value)
-                            }
-                        }
+                        x: { title: { display: true, text: 'Age' } },
+                        y: { title: { display: true, text: 'Portfolio Value' }, ticks: { callback: (value) => formatCurrency(value) } }
                     }
                 }
             });
@@ -1080,17 +3180,11 @@
                 html += '<p style="color: #27ae60;">No failures in this simulation run!</p>';
             } else {
                 failures.slice(0, 10).forEach(f => {
-                    const hustleNote = f.hustle_activated ?
-                        ` (hustle triggered at age ${f.hustle_activation_age})` : '';
-                    const spendingNote = f.spending_went_lean ? ' (went lean)' :
-                        (f.spending_reduced ? ' (reduced spending)' : '');
-                    html += `<div class="failure-item">
-                        Ran out of money at age <strong>${f.ruin_age}</strong>${hustleNote}${spendingNote}
-                    </div>`;
+                    const hustleNote = f.hustle_activated ? ` (hustle triggered at age ${f.hustle_activation_age})` : '';
+                    const spendingNote = f.spending_went_lean ? ' (went lean)' : (f.spending_reduced ? ' (reduced spending)' : '');
+                    html += `<div class="failure-item">Ran out of money at age <strong>${f.ruin_age}</strong>${hustleNote}${spendingNote}</div>`;
                 });
-                if (failures.length > 10) {
-                    html += `<p>...and ${failures.length - 10} more failures</p>`;
-                }
+                if (failures.length > 10) html += `<p>...and ${failures.length - 10} more failures</p>`;
             }
 
             html += '<h3 style="margin-top: 20px;">Close Calls (Survived but Got Scary)</h3>';
@@ -1099,17 +3193,104 @@
             } else {
                 closeCalls.slice(0, 5).forEach(cc => {
                     const hustleNote = cc.hustle_activated ? ' (hustle helped!)' : '';
-                    const spendingNote = cc.spending_went_lean ? ' (went lean)' :
-                        (cc.spending_reduced ? ' (reduced spending)' : '');
-                    html += `<div class="close-call-item">
-                        Dropped to <strong>${formatCurrency(cc.min_value)}</strong> at age ${cc.min_age},
-                        recovered to ${formatCurrency(cc.final_portfolio)}${hustleNote}${spendingNote}
-                    </div>`;
+                    const spendingNote = cc.spending_went_lean ? ' (went lean)' : (cc.spending_reduced ? ' (reduced spending)' : '');
+                    html += `<div class="close-call-item">Dropped to <strong>${formatCurrency(cc.min_value)}</strong> at age ${cc.min_age}, recovered to ${formatCurrency(cc.final_portfolio)}${hustleNote}${spendingNote}</div>`;
                 });
             }
 
             container.innerHTML = html;
         }
+
+        // =================================================================
+        // MODAL KEYBOARD/CLICK HANDLERS
+        // =================================================================
+        // Close modals on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeIncomePhaseModal();
+                closeWindfallModal();
+            }
+        });
+
+        // Close modals when clicking overlay background
+        document.getElementById('incomePhaseModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                closeIncomePhaseModal();
+            }
+        });
+        document.getElementById('windfallModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                closeWindfallModal();
+            }
+        });
+
+        // =================================================================
+        // DYNAMIC END AGE HANDLING
+        // =================================================================
+        let dynamicEndAgeCache = null;
+
+        async function updateDynamicEndAge() {
+            const mortalityEnabled = document.getElementById('t2_mortality_enabled').checked;
+            const manualRow = document.getElementById('end_age_manual_row');
+            const dynamicRow = document.getElementById('end_age_dynamic_row');
+
+            if (!mortalityEnabled) {
+                // Show manual input, hide dynamic display
+                manualRow.style.display = '';
+                dynamicRow.style.display = 'none';
+                return;
+            }
+
+            // Show dynamic display, hide manual input
+            manualRow.style.display = 'none';
+            dynamicRow.style.display = '';
+
+            const startAge = parseInt(document.getElementById('t2_start_age').value);
+            const healthClass = document.getElementById('t2_health_class').value;
+            const techScenario = document.getElementById('t2_tech_scenario').value;
+
+            try {
+                const response = await fetch('/api/calculate-end-age', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        start_age: startAge,
+                        health_class: healthClass,
+                        tech_scenario: techScenario
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to calculate');
+                const data = await response.json();
+                dynamicEndAgeCache = data;
+
+                // Update display
+                const endAgeDisplay = document.getElementById('dynamic_end_age_display');
+                const leDisplay = document.getElementById('dynamic_le_display');
+
+                endAgeDisplay.textContent = `Age ${data.end_age} (1% survival threshold)`;
+                leDisplay.textContent = `Life expectancy: ${data.life_expectancy.toFixed(1)} years from age ${startAge}`;
+
+            } catch (error) {
+                console.error('Error calculating dynamic end age:', error);
+                document.getElementById('dynamic_end_age_display').textContent = 'Error calculating';
+            }
+        }
+
+        // Add event listeners for mortality settings changes
+        document.getElementById('t2_mortality_enabled').addEventListener('change', updateDynamicEndAge);
+        document.getElementById('t2_health_class').addEventListener('change', updateDynamicEndAge);
+        document.getElementById('t2_tech_scenario').addEventListener('change', updateDynamicEndAge);
+        document.getElementById('t2_start_age').addEventListener('change', updateDynamicEndAge);
+
+        // =================================================================
+        // INITIALIZATION
+        // =================================================================
+        renderIncomePhases();
+        renderWindfalls();
+
+        // Initialize dynamic end age display
+        updateDynamicEndAge();
     </script>
 </body>
 </html>
