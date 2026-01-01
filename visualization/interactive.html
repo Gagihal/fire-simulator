@@ -3259,7 +3259,8 @@
 
             container.style.display = 'block';
             const p = data.params;
-            const total = p.num_simulations;
+            // Handle both Monte Carlo (num_simulations) and historical (num_periods)
+            const total = p.num_simulations || data.num_periods;
             const richPct = (s.survived_to_end / total * 100).toFixed(1);
             const deadPct = (s.died_with_money / total * 100).toFixed(1);
             const brokePct = (s.ran_out_of_money / total * 100).toFixed(1);
@@ -3328,6 +3329,8 @@
 
         function renderParams(data) {
             const p = data.params;
+            const isHistorical = data.method === 'historical_sequence';
+
             const phases = p.income_phases.length > 0
                 ? p.income_phases.map(ph => `Age ${ph.start_age}-${ph.end_age}: €${ph.amount.toLocaleString()} (${ph.name})`).join('<br>')
                 : 'None';
@@ -3342,13 +3345,18 @@
                 `Recovery at ${(p.spending_rules.recovery_threshold * 100)}% portfolio` :
                 'Disabled';
 
+            // Market params only shown for Monte Carlo, not historical (which uses actual returns)
+            const marketParams = isHistorical ?
+                `<div class="param-item"><span class="param-label">Returns:</span> Actual historical (${data.data_range})</div>` :
+                `<div class="param-item"><span class="param-label">Expected Return:</span> ${(p.expected_return * 100).toFixed(0)}%</div>
+                <div class="param-item"><span class="param-label">Inflation:</span> ${(p.inflation * 100).toFixed(0)}%</div>
+                <div class="param-item"><span class="param-label">Volatility:</span> ${(p.volatility * 100).toFixed(0)}%</div>`;
+
             document.getElementById('params').innerHTML = `
                 <div class="param-item"><span class="param-label">Starting Portfolio:</span> ${formatCurrency(p.starting_portfolio)}</div>
                 <div class="param-item"><span class="param-label">Annual Expenses:</span> ${formatCurrency(p.annual_expenses)}</div>
                 <div class="param-item"><span class="param-label">Time Horizon:</span> Age ${p.start_age} to ${p.end_age}</div>
-                <div class="param-item"><span class="param-label">Expected Return:</span> ${(p.expected_return * 100).toFixed(0)}%</div>
-                <div class="param-item"><span class="param-label">Inflation:</span> ${(p.inflation * 100).toFixed(0)}%</div>
-                <div class="param-item"><span class="param-label">Volatility:</span> ${(p.volatility * 100).toFixed(0)}%</div>
+                ${marketParams}
                 <div class="param-item"><span class="param-label">Income Phases:</span><br>${phases}</div>
                 <div class="param-item"><span class="param-label">Windfalls:</span><br>${windfalls}</div>
                 <div class="param-item"><span class="param-label">Spending Rules:</span><br>${spendingRules}</div>
