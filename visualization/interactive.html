@@ -3205,7 +3205,8 @@
             }
 
             const p = data.params;
-            const total = p.num_simulations;
+            // Handle both Monte Carlo (num_simulations) and historical (num_periods)
+            const total = p.num_simulations || data.num_periods;
             const survivedPct = (s.survived_to_end / total * 100).toFixed(1);
             const diedOkPct = (s.died_with_money / total * 100).toFixed(1);
             const ranOutPct = (s.ran_out_of_money / total * 100).toFixed(1);
