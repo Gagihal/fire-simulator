@@ -1766,7 +1766,7 @@
             };
 
             try {
-                const response = await fetch('/api/fire-assessment', {
+                const response = await fetch('api/fire-assessment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(params)
@@ -1931,7 +1931,7 @@
 
             try {
                 const startTime = Date.now();
-                const response = await fetch('/api/simulate', {
+                const response = await fetch('api/simulate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(params)
@@ -2034,7 +2034,7 @@
 
             try {
                 const startTime = Date.now();
-                const response = await fetch('/api/simulate-historical', {
+                const response = await fetch('api/simulate-historical', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(params)
@@ -2143,7 +2143,7 @@
 
             try {
                 const startTime = Date.now();
-                const response = await fetch('/api/simulate-historical-mortality', {
+                const response = await fetch('api/simulate-historical-mortality', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(params)
@@ -2264,7 +2264,7 @@
 
             try {
                 const startTime = Date.now();
-                const response = await fetch('/api/stress-scenarios', {
+                const response = await fetch('api/stress-scenarios', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(params)
@@ -2537,7 +2537,7 @@
 
             try {
                 const startTime = Date.now();
-                const response = await fetch('/api/legacy-tradeoff', {
+                const response = await fetch('api/legacy-tradeoff', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(params)
@@ -3250,7 +3250,7 @@
             const techScenario = document.getElementById('t2_tech_scenario').value;
 
             try {
-                const response = await fetch('/api/calculate-end-age', {
+                const response = await fetch('api/calculate-end-age', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
