@@ -681,6 +681,60 @@
             text-align: center;
         }
 
+        /* Rich, Broke, or Dead Section */
+        .rbd-section {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            color: white;
+        }
+        .rbd-section h3 {
+            color: #ecf0f1;
+            margin: 0 0 20px 0;
+            text-align: center;
+            font-size: 1.3em;
+        }
+        .rbd-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .rbd-card {
+            padding: 25px 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .rbd-card.rich {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        }
+        .rbd-card.dead {
+            background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%);
+        }
+        .rbd-card.broke {
+            background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+        }
+        .rbd-card .rbd-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .rbd-card .rbd-label {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .rbd-card .rbd-desc {
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+        .rbd-disabled {
+            color: #888;
+            font-style: italic;
+            padding: 20px;
+            text-align: center;
+        }
+
         .initial-message {
             text-align: center;
             padding: 60px 20px;
@@ -895,6 +949,7 @@
         <div class="template-section">
             <button class="template-btn" onclick="loadTemplate('blank')">Start Fresh</button>
             <button class="template-btn example" onclick="loadTemplate('example')">Load Example</button>
+            <button class="template-btn" onclick="openFinnishPresets()" style="background: #e8f4fc; border-color: #5dade2;">Finnish Presets</button>
         </div>
 
         <h2 style="margin-top: 0;">Plan Future Scenarios</h2>
@@ -1080,6 +1135,7 @@
             <button class="primary-btn historical-btn" id="runHistorical">Run Historical</button>
             <button class="primary-btn mortality-btn" id="runHistoricalMortality">Historical + Mortality</button>
             <button class="primary-btn stress-btn" id="runStressTests">Run ALL Stress Tests</button>
+            <button class="template-btn" id="shareLink" onclick="copyShareLink()" style="margin-left: auto;">Share Link</button>
             <span id="status"></span>
         </div>
     </div>
@@ -1103,6 +1159,7 @@
     <div id="tab2-results">
         <div class="method-header" id="methodHeader"></div>
         <div class="mortality-section" id="mortalitySection"></div>
+        <div class="rbd-section" id="rbdSection"></div>
         <h2 id="resultsTitle">Portfolio Success</h2>
         <div class="summary-grid" id="summary"></div>
         <div class="params-section">
@@ -1205,6 +1262,41 @@
                 <button class="modal-btn delete" id="deleteWindfallBtn" onclick="deleteWindfall()" style="display: none;">Delete</button>
                 <button class="modal-btn cancel" onclick="closeWindfallModal()">Cancel</button>
                 <button class="modal-btn save" onclick="saveWindfall()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Finnish Presets Modal -->
+    <div class="modal-overlay" id="finnishPresetsModal">
+        <div class="modal" style="max-width: 500px;">
+            <h3>Finnish Retirement Presets</h3>
+            <p style="color: #666; font-size: 0.9em; margin-bottom: 20px;">
+                Click to add common Finnish income sources to your plan. You can add multiple.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="modal-btn save" onclick="addFinnishPreset('kansanelake')" style="text-align: left; padding: 12px 16px;">
+                    <strong>+ Kansaneläke</strong><br>
+                    <span style="font-size: 0.85em; opacity: 0.9;">National pension: €8.4k/year from age 65</span>
+                </button>
+                <button class="modal-btn save" onclick="addFinnishPreset('takuuelake')" style="text-align: left; padding: 12px 16px;">
+                    <strong>+ Takuueläke</strong><br>
+                    <span style="font-size: 0.85em; opacity: 0.9;">Guarantee pension: €10.4k/year from age 65 (if no other pension)</span>
+                </button>
+                <button class="modal-btn save" onclick="addFinnishPreset('tyoelake_small')" style="text-align: left; padding: 12px 16px;">
+                    <strong>+ Työeläke (small)</strong><br>
+                    <span style="font-size: 0.85em; opacity: 0.9;">Employment pension: €12k/year from age 65</span>
+                </button>
+                <button class="modal-btn save" onclick="addFinnishPreset('tyoelake_medium')" style="text-align: left; padding: 12px 16px;">
+                    <strong>+ Työeläke (medium)</strong><br>
+                    <span style="font-size: 0.85em; opacity: 0.9;">Employment pension: €20k/year from age 65</span>
+                </button>
+                <button class="modal-btn save" onclick="addFinnishPreset('tyoelake_full')" style="text-align: left; padding: 12px 16px;">
+                    <strong>+ Työeläke (full career)</strong><br>
+                    <span style="font-size: 0.85em; opacity: 0.9;">Employment pension: €30k/year from age 65</span>
+                </button>
+            </div>
+            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+                <button class="modal-btn cancel" onclick="closeFinnishPresets()" style="width: 100%;">Done</button>
             </div>
         </div>
     </div>
@@ -1349,8 +1441,193 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeTooltip();
+                closeFinnishPresets();
             }
         });
+
+        // =================================================================
+        // FINNISH PRESETS
+        // =================================================================
+        const FINNISH_PRESETS = {
+            kansanelake: { name: 'Kansaneläke', start_age: 65, end_age: 110, amount: 8.4 },
+            takuuelake: { name: 'Takuueläke', start_age: 65, end_age: 110, amount: 10.4 },
+            tyoelake_small: { name: 'Työeläke', start_age: 65, end_age: 110, amount: 12 },
+            tyoelake_medium: { name: 'Työeläke', start_age: 65, end_age: 110, amount: 20 },
+            tyoelake_full: { name: 'Työeläke', start_age: 65, end_age: 110, amount: 30 }
+        };
+
+        function openFinnishPresets() {
+            document.getElementById('finnishPresetsModal').classList.add('active');
+        }
+
+        function closeFinnishPresets() {
+            document.getElementById('finnishPresetsModal').classList.remove('active');
+        }
+
+        function addFinnishPreset(key) {
+            const preset = FINNISH_PRESETS[key];
+            if (!preset) return;
+
+            // Check if at max phases
+            if (formState.incomePhases.length >= formState.maxPhases) {
+                alert(`Maximum ${formState.maxPhases} income phases allowed. Please remove one first.`);
+                return;
+            }
+
+            // Check if this preset already exists
+            const exists = formState.incomePhases.some(p =>
+                p.name === preset.name && p.start_age === preset.start_age && p.amount === preset.amount
+            );
+            if (exists) {
+                alert(`${preset.name} is already added.`);
+                return;
+            }
+
+            // Add the preset
+            formState.incomePhases.push({...preset});
+            renderIncomePhases();
+
+            // Brief visual feedback
+            event.target.closest('button').style.background = '#27ae60';
+            setTimeout(() => {
+                event.target.closest('button').style.background = '';
+            }, 300);
+        }
+
+        // =================================================================
+        // URL PARAMETER SHARING
+        // =================================================================
+        function encodeScenarioToURL() {
+            const params = new URLSearchParams();
+
+            // Portfolio & basics
+            params.set('p', document.getElementById('t2_starting_portfolio').value);
+            params.set('e', document.getElementById('t2_annual_expenses').value);
+            params.set('sa', document.getElementById('t2_start_age').value);
+            params.set('ea', document.getElementById('t2_end_age').value);
+
+            // Investment assumptions
+            params.set('r', document.getElementById('t2_expected_return').value);
+            params.set('i', document.getElementById('t2_inflation').value);
+            params.set('v', document.getElementById('t2_volatility').value);
+
+            // Hustle settings
+            params.set('he', document.getElementById('t2_hustle_enabled').checked ? '1' : '0');
+            params.set('hi', document.getElementById('t2_hustle_income').value);
+            params.set('ha', document.getElementById('t2_hustle_trigger_age').value);
+            params.set('hd', document.getElementById('t2_hustle_duration').value);
+            params.set('ht', document.getElementById('t2_hustle_threshold').value);
+
+            // Spending settings
+            params.set('se', document.getElementById('t2_spending_enabled').checked ? '1' : '0');
+            params.set('sr', document.getElementById('t2_reduced_spending').value);
+            params.set('sl', document.getElementById('t2_lean_spending').value);
+            params.set('sd', document.getElementById('t2_drop_threshold').value);
+            params.set('sc', document.getElementById('t2_recovery_threshold').value);
+            params.set('sla', document.getElementById('t2_lean_age').value);
+
+            // Mortality settings
+            params.set('me', document.getElementById('t2_mortality_enabled').checked ? '1' : '0');
+            params.set('mh', document.getElementById('t2_health_class').value);
+            params.set('mt', document.getElementById('t2_tech_scenario').value);
+
+            // Complex fields (base64 encoded JSON)
+            if (formState.incomePhases.length > 0) {
+                params.set('ip', btoa(JSON.stringify(formState.incomePhases)));
+            }
+            if (formState.windfalls.length > 0) {
+                params.set('wf', btoa(JSON.stringify(formState.windfalls)));
+            }
+
+            return params.toString();
+        }
+
+        function copyShareLink() {
+            const queryString = encodeScenarioToURL();
+            const newURL = `${window.location.origin}${window.location.pathname}?${queryString}`;
+
+            // Update URL without reload
+            window.history.replaceState({}, '', newURL);
+
+            // Copy to clipboard
+            navigator.clipboard.writeText(newURL).then(() => {
+                const btn = document.getElementById('shareLink');
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.style.background = '#27ae60';
+                btn.style.color = 'white';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                    btn.style.color = '';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy link. URL has been updated in address bar.');
+            });
+        }
+
+        function loadScenarioFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            if (!params.has('p')) return; // No scenario in URL
+
+            // Portfolio & basics
+            if (params.has('p')) document.getElementById('t2_starting_portfolio').value = params.get('p');
+            if (params.has('e')) document.getElementById('t2_annual_expenses').value = params.get('e');
+            if (params.has('sa')) document.getElementById('t2_start_age').value = params.get('sa');
+            if (params.has('ea')) document.getElementById('t2_end_age').value = params.get('ea');
+
+            // Investment assumptions
+            if (params.has('r')) document.getElementById('t2_expected_return').value = params.get('r');
+            if (params.has('i')) document.getElementById('t2_inflation').value = params.get('i');
+            if (params.has('v')) document.getElementById('t2_volatility').value = params.get('v');
+
+            // Hustle settings
+            if (params.has('he')) document.getElementById('t2_hustle_enabled').checked = params.get('he') === '1';
+            if (params.has('hi')) document.getElementById('t2_hustle_income').value = params.get('hi');
+            if (params.has('ha')) document.getElementById('t2_hustle_trigger_age').value = params.get('ha');
+            if (params.has('hd')) document.getElementById('t2_hustle_duration').value = params.get('hd');
+            if (params.has('ht')) document.getElementById('t2_hustle_threshold').value = params.get('ht');
+
+            // Spending settings
+            if (params.has('se')) document.getElementById('t2_spending_enabled').checked = params.get('se') === '1';
+            if (params.has('sr')) document.getElementById('t2_reduced_spending').value = params.get('sr');
+            if (params.has('sl')) document.getElementById('t2_lean_spending').value = params.get('sl');
+            if (params.has('sd')) document.getElementById('t2_drop_threshold').value = params.get('sd');
+            if (params.has('sc')) document.getElementById('t2_recovery_threshold').value = params.get('sc');
+            if (params.has('sla')) document.getElementById('t2_lean_age').value = params.get('sla');
+
+            // Mortality settings
+            if (params.has('me')) document.getElementById('t2_mortality_enabled').checked = params.get('me') === '1';
+            if (params.has('mh')) document.getElementById('t2_health_class').value = params.get('mh');
+            if (params.has('mt')) document.getElementById('t2_tech_scenario').value = params.get('mt');
+
+            // Complex fields (base64 encoded JSON)
+            if (params.has('ip')) {
+                try {
+                    formState.incomePhases = JSON.parse(atob(params.get('ip')));
+                    renderIncomePhases();
+                } catch (e) {
+                    console.error('Failed to parse income phases from URL:', e);
+                }
+            }
+            if (params.has('wf')) {
+                try {
+                    formState.windfalls = JSON.parse(atob(params.get('wf')));
+                    renderWindfalls();
+                } catch (e) {
+                    console.error('Failed to parse windfalls from URL:', e);
+                }
+            }
+
+            // Switch to Future Scenarios tab
+            showTab('scenarios');
+
+            // Update dynamic end age display if mortality enabled
+            if (params.get('me') === '1') {
+                updateDynamicEndAge();
+            }
+        }
 
         // =================================================================
         // TEMPLATES
@@ -1953,6 +2230,7 @@
                 resetChartContainers();
                 renderMethodHeader('monte-carlo', data.params.num_simulations);
                 renderMortality(data);
+                renderRichBrokeDead(data);
                 renderSummary(data);
                 renderParams(data);
                 renderFanChart(data);
@@ -2165,6 +2443,7 @@
                 resetChartContainers();
                 renderMethodHeader('historical-mortality', data.num_periods, data.data_range);
                 renderMortality(data);  // Show mortality stats!
+                renderRichBrokeDead(data);
                 renderHistoricalSummary(data);
                 renderParams(data);
                 renderFanChart(data);
@@ -2969,6 +3248,44 @@
             `;
         }
 
+        function renderRichBrokeDead(data) {
+            const s = data.summary;
+            const container = document.getElementById('rbdSection');
+
+            if (!s.mortality_enabled) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            const p = data.params;
+            const total = p.num_simulations;
+            const richPct = (s.survived_to_end / total * 100).toFixed(1);
+            const deadPct = (s.died_with_money / total * 100).toFixed(1);
+            const brokePct = (s.ran_out_of_money / total * 100).toFixed(1);
+
+            container.innerHTML = `
+                <h3>Rich, Broke, or Dead?</h3>
+                <div class="rbd-grid">
+                    <div class="rbd-card rich">
+                        <div class="rbd-value">${richPct}%</div>
+                        <div class="rbd-label">RICH</div>
+                        <div class="rbd-desc">Made it to ${p.end_age} with money</div>
+                    </div>
+                    <div class="rbd-card dead">
+                        <div class="rbd-value">${deadPct}%</div>
+                        <div class="rbd-label">DEAD</div>
+                        <div class="rbd-desc">Died peacefully with money</div>
+                    </div>
+                    <div class="rbd-card broke">
+                        <div class="rbd-value">${brokePct}%</div>
+                        <div class="rbd-label">BROKE</div>
+                        <div class="rbd-desc">Ran out while still alive</div>
+                    </div>
+                </div>
+            `;
+        }
+
         function renderSummary(data) {
             const s = data.summary;
             const successClass = s.success_rate >= 0.95 ? 'success' : s.success_rate >= 0.90 ? 'warning' : 'danger';
@@ -3286,6 +3603,10 @@
         // =================================================================
         // INITIALIZATION
         // =================================================================
+
+        // Load scenario from URL if present (must be before renderIncomePhases/renderWindfalls)
+        loadScenarioFromURL();
+
         renderIncomePhases();
         renderWindfalls();
 
