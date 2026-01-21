@@ -14,16 +14,16 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            background: #f5f5f5;
-            color: #333;
+            background: #1a1a2e;
+            color: #e0e0e0;
         }
         h1 {
-            color: #2c3e50;
+            color: #a8d8ea;
             border-bottom: 3px solid #3498db;
             padding-bottom: 10px;
         }
         h2 {
-            color: #34495e;
+            color: #a8d8ea;
             margin-top: 40px;
         }
         .summary-grid {
@@ -33,41 +33,45 @@
             margin: 20px 0;
         }
         .stat-card {
-            background: white;
+            background: #252542;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             text-align: center;
         }
         .stat-value {
             font-size: 2em;
             font-weight: bold;
-            color: #2c3e50;
+            color: #a8d8ea;
         }
-        .stat-value.success { color: #27ae60; }
+        .stat-value.success { color: #2ecc71; }
         .stat-value.warning { color: #f39c12; }
         .stat-value.danger { color: #e74c3c; }
         .stat-label {
-            color: #7f8c8d;
+            color: #aaa;
             font-size: 0.9em;
             margin-top: 5px;
         }
         .chart-container {
-            background: white;
+            background: #252542;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             margin: 20px 0;
         }
         .chart-container canvas {
             max-height: 400px;
         }
         .params-section {
-            background: white;
+            background: #252542;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             margin: 20px 0;
+        }
+        .params-section h3 {
+            color: #a8d8ea;
+            margin-top: 0;
         }
         .params-grid {
             display: grid;
@@ -76,39 +80,42 @@
         }
         .param-item {
             padding: 8px;
-            background: #f8f9fa;
+            background: #1a1a2e;
             border-radius: 4px;
         }
         .param-label {
             font-weight: 500;
-            color: #555;
+            color: #a8d8ea;
         }
         .failure-list {
-            background: white;
+            background: #252542;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .failure-list h3 {
+            color: #a8d8ea;
         }
         .failure-item {
             padding: 10px;
             margin: 5px 0;
-            background: #fff5f5;
+            background: rgba(231, 76, 60, 0.2);
             border-left: 4px solid #e74c3c;
             border-radius: 4px;
         }
         .close-call-item {
             padding: 10px;
             margin: 5px 0;
-            background: #fffaf0;
+            background: rgba(243, 156, 18, 0.2);
             border-left: 4px solid #f39c12;
             border-radius: 4px;
         }
         .legend-note {
             font-size: 0.85em;
-            color: #666;
+            color: #aaa;
             margin-top: 10px;
             padding: 10px;
-            background: #f8f9fa;
+            background: #1a1a2e;
             border-radius: 4px;
         }
         .mortality-section {
@@ -117,6 +124,7 @@
             border-radius: 12px;
             margin: 20px 0;
             color: white;
+            border: 1px solid #3498db;
         }
         .mortality-section h3 {
             color: #a8d8ea;
@@ -171,10 +179,10 @@
             text-align: center;
         }
         .scenario-selector {
-            background: white;
+            background: #252542;
             padding: 15px 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             margin-bottom: 20px;
             display: flex;
             align-items: center;
@@ -183,29 +191,33 @@
         }
         .scenario-selector label {
             font-weight: 600;
-            color: #2c3e50;
+            color: #a8d8ea;
         }
         .scenario-selector select {
             padding: 10px 15px;
             font-size: 1em;
             border: 2px solid #3498db;
             border-radius: 6px;
-            background: white;
+            background: #1a1a2e;
+            color: #e0e0e0;
             cursor: pointer;
             min-width: 300px;
         }
         .scenario-selector select:hover {
-            border-color: #2980b9;
+            border-color: #5dade2;
         }
         .scenario-selector select:focus {
             outline: none;
-            border-color: #2980b9;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            border-color: #5dade2;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
         }
         .scenario-info {
             font-size: 0.85em;
-            color: #666;
+            color: #aaa;
             margin-left: auto;
+        }
+        #loading {
+            color: #a8d8ea;
         }
     </style>
 </head>
@@ -268,6 +280,10 @@
     </div>
 
     <script>
+        // Configure Chart.js for dark mode
+        Chart.defaults.color = '#aaa';
+        Chart.defaults.borderColor = 'rgba(255,255,255,0.1)';
+
         // Global chart references (needed to destroy before recreating)
         let fanChart = null;
         let failureChart = null;
@@ -345,8 +361,8 @@
                 renderFailureList(data);
             } catch (error) {
                 document.getElementById('loading').innerHTML =
-                    '<p style="color: red;">Error loading data: ' + filename + '</p>' +
-                    '<pre>' + error.message + '</pre>';
+                    '<p style="color: #e74c3c;">Error loading data: ' + filename + '</p>' +
+                    '<pre style="color: #aaa;">' + error.message + '</pre>';
             }
         }
 
@@ -537,8 +553,8 @@
                             label: '5th-95th percentile',
                             data: perc.p95,
                             fill: '+5',
-                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                            borderColor: 'rgba(52, 152, 219, 0.3)',
+                            backgroundColor: 'rgba(52, 152, 219, 0.15)',
+                            borderColor: 'rgba(52, 152, 219, 0.4)',
                             borderWidth: 1,
                             pointRadius: 0
                         },
@@ -546,7 +562,7 @@
                             label: '',
                             data: perc.p5,
                             fill: false,
-                            borderColor: 'rgba(52, 152, 219, 0.3)',
+                            borderColor: 'rgba(52, 152, 219, 0.4)',
                             borderWidth: 1,
                             pointRadius: 0
                         },
@@ -555,8 +571,8 @@
                             label: '15th-75th percentile',
                             data: perc.p75,
                             fill: '+1',
-                            backgroundColor: 'rgba(52, 152, 219, 0.2)',
-                            borderColor: 'rgba(52, 152, 219, 0.4)',
+                            backgroundColor: 'rgba(52, 152, 219, 0.25)',
+                            borderColor: 'rgba(52, 152, 219, 0.5)',
                             borderWidth: 1,
                             pointRadius: 0
                         },
@@ -564,7 +580,7 @@
                             label: '',
                             data: perc.p15,
                             fill: false,
-                            borderColor: 'rgba(52, 152, 219, 0.4)',
+                            borderColor: 'rgba(52, 152, 219, 0.5)',
                             borderWidth: 1,
                             pointRadius: 0
                         },
@@ -573,7 +589,7 @@
                             label: '25th-75th percentile',
                             data: perc.p75,
                             fill: '+1',
-                            backgroundColor: 'rgba(52, 152, 219, 0.3)',
+                            backgroundColor: 'rgba(52, 152, 219, 0.35)',
                             borderColor: 'transparent',
                             borderWidth: 0,
                             pointRadius: 0
@@ -591,7 +607,7 @@
                             label: 'Median (50th)',
                             data: perc.p50,
                             fill: false,
-                            borderColor: 'rgba(41, 128, 185, 1)',
+                            borderColor: 'rgba(93, 173, 226, 1)',
                             borderWidth: 3,
                             pointRadius: 0
                         },
@@ -600,7 +616,7 @@
                             label: '10th percentile',
                             data: perc.p10,
                             fill: false,
-                            borderColor: 'rgba(231, 76, 60, 0.7)',
+                            borderColor: 'rgba(231, 76, 60, 0.8)',
                             borderWidth: 2,
                             borderDash: [5, 5],
                             pointRadius: 0
@@ -613,7 +629,8 @@
                         legend: {
                             display: true,
                             labels: {
-                                filter: (item) => item.text !== ''
+                                filter: (item) => item.text !== '',
+                                color: '#aaa'
                             }
                         },
                         tooltip: {
@@ -626,13 +643,17 @@
                     },
                     scales: {
                         x: {
-                            title: { display: true, text: 'Age' }
+                            title: { display: true, text: 'Age', color: '#aaa' },
+                            ticks: { color: '#888' },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
                         },
                         y: {
-                            title: { display: true, text: 'Portfolio Value' },
+                            title: { display: true, text: 'Portfolio Value', color: '#aaa' },
                             ticks: {
-                                callback: (value) => formatCurrency(value)
-                            }
+                                callback: (value) => formatCurrency(value),
+                                color: '#888'
+                            },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
                         }
                     }
                 }
@@ -644,11 +665,11 @@
             const failures = data.failures.slice(0, 15); // Show first 15
 
             const colors = [
-                'rgba(231, 76, 60, 0.7)',
-                'rgba(192, 57, 43, 0.7)',
-                'rgba(155, 89, 182, 0.7)',
-                'rgba(142, 68, 173, 0.7)',
-                'rgba(211, 84, 0, 0.7)'
+                'rgba(231, 76, 60, 0.8)',
+                'rgba(192, 57, 43, 0.8)',
+                'rgba(155, 89, 182, 0.8)',
+                'rgba(142, 68, 173, 0.8)',
+                'rgba(211, 84, 0, 0.8)'
             ];
 
             const datasets = failures.map((f, i) => ({
@@ -669,17 +690,24 @@
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: { display: true }
+                        legend: {
+                            display: true,
+                            labels: { color: '#aaa' }
+                        }
                     },
                     scales: {
                         x: {
-                            title: { display: true, text: 'Age' }
+                            title: { display: true, text: 'Age', color: '#aaa' },
+                            ticks: { color: '#888' },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
                         },
                         y: {
-                            title: { display: true, text: 'Portfolio Value' },
+                            title: { display: true, text: 'Portfolio Value', color: '#aaa' },
                             ticks: {
-                                callback: (value) => formatCurrency(value)
+                                callback: (value) => formatCurrency(value),
+                                color: '#888'
                             },
+                            grid: { color: 'rgba(255,255,255,0.05)' },
                             min: 0
                         }
                     }
@@ -692,7 +720,7 @@
             const closeCalls = data.close_calls.slice(0, 10);
 
             if (closeCalls.length === 0) {
-                ctx.canvas.parentElement.innerHTML = '<p>No close calls (minimum portfolio stayed above threshold in all surviving simulations).</p>';
+                ctx.canvas.parentElement.innerHTML = '<p style="color: #aaa;">No close calls (minimum portfolio stayed above threshold in all surviving simulations).</p>';
                 return;
             }
 
@@ -700,7 +728,7 @@
                 label: `Min €${Math.round(cc.min_value/1000)}k at age ${cc.min_age}`,
                 data: cc.trajectory,
                 fill: false,
-                borderColor: `hsla(${40 + i * 10}, 80%, 50%, 0.7)`,
+                borderColor: `hsla(${40 + i * 10}, 80%, 55%, 0.8)`,
                 borderWidth: 2,
                 pointRadius: 0
             }));
@@ -714,17 +742,24 @@
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: { display: true }
+                        legend: {
+                            display: true,
+                            labels: { color: '#aaa' }
+                        }
                     },
                     scales: {
                         x: {
-                            title: { display: true, text: 'Age' }
+                            title: { display: true, text: 'Age', color: '#aaa' },
+                            ticks: { color: '#888' },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
                         },
                         y: {
-                            title: { display: true, text: 'Portfolio Value' },
+                            title: { display: true, text: 'Portfolio Value', color: '#aaa' },
                             ticks: {
-                                callback: (value) => formatCurrency(value)
-                            }
+                                callback: (value) => formatCurrency(value),
+                                color: '#888'
+                            },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
                         }
                     }
                 }
